@@ -176,39 +176,11 @@ EOT
   )
 }
 
-resource "databricks_cluster" "ingestion_cluster" {
-  cluster_name            = "calcom-ingestion-cluster"
-  spark_version           = "13.3.x-scala2.12"
-  node_type_id            = "i3.xlarge"
-  autotermination_minutes = 20
-  num_workers             = 0
-
-  spark_conf = {
-    "spark.databricks.cluster.profile" = "singleNode"
-    "spark.master"                     = "local[*]"
-  }
-
-  custom_tags = {
-    "ResourceClass" = "SingleNode"
-    "project"       = local.common_tags["project"]
-    "environment"   = var.environment
-    "managed_by"    = "terraform"
-  }
-
-  library {
-    maven {
-      coordinates = "org.postgresql:postgresql:42.6.0"
-    }
-  }
-}
-
 resource "databricks_job" "booking_ingestion" {
   name = "calcom-booking-ingestion"
 
   task {
     task_key = "ingest_bookings"
-
-    existing_cluster_id = databricks_cluster.ingestion_cluster.id
 
     notebook_task {
       notebook_path = databricks_notebook.booking_ingestion.path

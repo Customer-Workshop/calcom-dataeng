@@ -10,15 +10,21 @@ variable "databricks_token" {
 }
 
 variable "catalog_name" {
-  description = "Unity Catalog name for the lakehouse"
+  description = "Unity Catalog name for the lakehouse. Use 'workspace' for default catalog or an existing catalog name."
   type        = string
-  default     = "calcom_lakehouse"
+  default     = "workspace"
 }
 
 variable "schema_name" {
   description = "Schema name within the catalog"
   type        = string
-  default     = "booking_data"
+  default     = "calcom_booking_data"
+}
+
+variable "create_catalog" {
+  description = "Whether to create a new catalog. Set to false to use an existing catalog."
+  type        = bool
+  default     = false
 }
 
 variable "warehouse_name" {
@@ -31,6 +37,18 @@ variable "warehouse_size" {
   description = "Size of the SQL warehouse (2X-Small, X-Small, Small, Medium, Large, X-Large, 2X-Large, 3X-Large, 4X-Large)"
   type        = string
   default     = "2X-Small"
+}
+
+variable "create_warehouse" {
+  description = "Whether to create a new SQL warehouse. Set to false if workspace has reached warehouse limit."
+  type        = bool
+  default     = false
+}
+
+variable "use_serverless_compute" {
+  description = "Whether to use serverless compute for jobs instead of creating a cluster."
+  type        = bool
+  default     = true
 }
 
 variable "postgres_host" {
