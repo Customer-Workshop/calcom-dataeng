@@ -1,0 +1,26 @@
+# Databricks Configuration
+databricks_host  = "https://your-workspace.cloud.databricks.com"
+databricks_token = "your-databricks-token"
+
+# Catalog and Schema Configuration
+catalog_name   = "calcom_lakehouse"
+schema_name    = "booking_data"
+warehouse_name = "calcom-warehouse"
+warehouse_size = "2X-Small"
+
+# PostgreSQL Source Database Configuration
+postgres_host     = "your-postgres-host.example.com"
+postgres_port     = 5432
+postgres_database = "calcom"
+postgres_user     = "your-postgres-user"
+postgres_password = "your-postgres-password"
+
+# Environment Configuration
+environment = "dev"
+
+# Tags
+tags = {
+  project    = "calcom-lakehouse"
+  managed_by = "terraform"
+  team       = "data-engineering"
+}
