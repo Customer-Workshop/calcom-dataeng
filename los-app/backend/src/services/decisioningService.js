@@ -2,6 +2,7 @@ const { db } = require('../config/database');
 const { createAuditLog } = require('../utils/audit');
 const { notifyStatusChange } = require('../utils/notifications');
 const { generateAdverseActionPDF } = require('../utils/pdf');
+const { decrypt, isEncrypted } = require('../utils/encryption');
 
 /**
  * Rules-based decisioning engine.
@@ -55,8 +56,11 @@ async function runDecisionEngine(applicationId, userId) {
   const requestedAmount = parseFloat(application.requested_amount);
   const isUnsecured = !product.requires_collateral;
   const ltvRatio = isUnsecured ? 0 : (collateralValue > 0 ? (requestedAmount / collateralValue) * 100 : 100);
-  const monthlyDebt = parseFloat(borrower.monthly_debt_payments || 0);
-  const annualIncome = parseFloat(borrower.annual_income || 0);
+  // Decrypt PII fields if encrypted (AES-256-GCM at rest)
+  const rawDebt = isEncrypted(borrower.monthly_debt_payments) ? decrypt(borrower.monthly_debt_payments) : borrower.monthly_debt_payments;
+  const rawIncome = isEncrypted(borrower.annual_income) ? decrypt(borrower.annual_income) : borrower.annual_income;
+  const monthlyDebt = parseFloat(rawDebt || 0);
+  const annualIncome = parseFloat(rawIncome || 0);
 
   // Include proposed loan payment in DTI calculation
   const estimatedMonthlyPayment = requestedAmount * (parseFloat(product.min_rate) / 100 / 12) /

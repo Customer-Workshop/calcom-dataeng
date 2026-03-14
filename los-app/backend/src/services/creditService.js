@@ -1,5 +1,6 @@
 const { db } = require('../config/database');
 const { createAuditLog } = require('../utils/audit');
+const { decrypt, isEncrypted } = require('../utils/encryption');
 
 /**
  * Mock credit bureau service. Simulates soft and hard credit pulls.
@@ -9,8 +10,11 @@ const { createAuditLog } = require('../utils/audit');
 /** Generate a mock credit score based on borrower financial profile */
 function generateMockCreditScore(borrower) {
   let baseScore = 680;
-  const income = parseFloat(borrower.annual_income || 0);
-  const debt = parseFloat(borrower.monthly_debt_payments || 0);
+  // Decrypt PII fields if encrypted (AES-256-GCM at rest)
+  const rawIncome = isEncrypted(borrower.annual_income) ? decrypt(borrower.annual_income) : borrower.annual_income;
+  const rawDebt = isEncrypted(borrower.monthly_debt_payments) ? decrypt(borrower.monthly_debt_payments) : borrower.monthly_debt_payments;
+  const income = parseFloat(rawIncome || 0);
+  const debt = parseFloat(rawDebt || 0);
   const yearsEmployed = borrower.years_employed || 0;
 
   if (income > 100000) baseScore += 40;
