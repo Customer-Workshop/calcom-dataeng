@@ -53,7 +53,8 @@ async function runDecisionEngine(applicationId, userId) {
   const creditScore = creditReport ? creditReport.score : 0;
   const collateralValue = collateral ? parseFloat(collateral.estimated_value || 0) : 0;
   const requestedAmount = parseFloat(application.requested_amount);
-  const ltvRatio = collateralValue > 0 ? (requestedAmount / collateralValue) * 100 : 100;
+  const isUnsecured = !product.requires_collateral;
+  const ltvRatio = isUnsecured ? 0 : (collateralValue > 0 ? (requestedAmount / collateralValue) * 100 : 100);
   const monthlyDebt = parseFloat(borrower.monthly_debt_payments || 0);
   const annualIncome = parseFloat(borrower.annual_income || 0);
 
@@ -83,8 +84,10 @@ async function runDecisionEngine(applicationId, userId) {
     reasonCodes.push('CREDIT_SCORE_PASS');
   }
 
-  // Rule 2: LTV check
-  if (ltvRatio > parseFloat(product.max_ltv || 100)) {
+  // Rule 2: LTV check (skip for unsecured products where max_ltv is 0)
+  if (isUnsecured) {
+    reasonCodes.push('LTV_NOT_APPLICABLE');
+  } else if (ltvRatio > parseFloat(product.max_ltv || 100)) {
     reasonCodes.push('LTV_EXCEEDS_PRODUCT_MAX');
     decision = 'auto_decline';
   } else if (ltvRatio > DECISION_BANDS.refer.max_ltv) {
