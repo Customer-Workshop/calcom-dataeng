@@ -214,7 +214,7 @@ export default function BorrowerApplication() {
             <div className="flex gap-3">
               <button type="button" onClick={() => setStep(2)} className="flex-1 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50">Back</button>
               <button type="submit" disabled={loading}
-                className="flex-1 py-2.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center">
+                className="flex-1 py-2.5 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors disabled:opacity-50 flex items-center justify-center">
                 <Send className="w-4 h-4 mr-2" />{loading ? 'Submitting...' : 'Submit Application'}
               </button>
             </div>
