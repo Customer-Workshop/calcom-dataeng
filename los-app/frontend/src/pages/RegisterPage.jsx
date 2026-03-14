@@ -27,8 +27,8 @@ export default function RegisterPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-100 rounded-full mb-4">
             <UserPlus className="w-8 h-8 text-primary-600" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Create Account</h1>
-          <p className="text-gray-500 mt-1">Apply for a loan today</p>
+          <h1 className="text-2xl font-bold text-gray-900">Republic Finance</h1>
+          <p className="text-gray-500 mt-1">Create your borrower account</p>
         </div>
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center text-red-700 text-sm">

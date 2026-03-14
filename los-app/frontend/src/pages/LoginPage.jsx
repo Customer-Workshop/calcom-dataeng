@@ -5,12 +5,12 @@ import useStore from '../store/useStore';
 
 const DEMO_ACCOUNTS = [
   { email: 'borrower1@example.com', role: 'Borrower', password: 'Password123!' },
-  { email: 'lo1@lossystem.com', role: 'Loan Officer', password: 'Password123!' },
-  { email: 'bm1@lossystem.com', role: 'Branch Manager', password: 'Password123!' },
-  { email: 'uw1@lossystem.com', role: 'Underwriter', password: 'Password123!' },
-  { email: 'compliance@lossystem.com', role: 'Compliance', password: 'Password123!' },
-  { email: 'admin@lossystem.com', role: 'System Admin', password: 'Password123!' },
-  { email: 'exec@lossystem.com', role: 'Executive', password: 'Password123!' },
+  { email: 'lo1@republicfinance.com', role: 'Loan Officer', password: 'Password123!' },
+  { email: 'bm1@republicfinance.com', role: 'Branch Manager', password: 'Password123!' },
+  { email: 'uw1@republicfinance.com', role: 'Underwriter', password: 'Password123!' },
+  { email: 'compliance@republicfinance.com', role: 'Compliance', password: 'Password123!' },
+  { email: 'admin@republicfinance.com', role: 'System Admin', password: 'Password123!' },
+  { email: 'exec@republicfinance.com', role: 'Executive', password: 'Password123!' },
 ];
 
 export default function LoginPage() {
@@ -49,8 +49,8 @@ export default function LoginPage() {
             <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-100 rounded-full mb-4">
               <LogIn className="w-8 h-8 text-primary-600" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">Loan Origination System</h1>
-            <p className="text-gray-500 mt-1">Sign in to your account</p>
+            <h1 className="text-2xl font-bold text-gray-900">Republic Finance</h1>
+            <p className="text-gray-500 mt-1">Loan Origination System</p>
           </div>
 
           {error && (
