@@ -1,10 +1,14 @@
 const { db } = require('../config/database');
 const { createAuditLog } = require('../utils/audit');
+const { identityCheckBreaker } = require('../config/circuitBreaker');
 
 /**
  * Mock identity and fraud check service.
  * Simulates OFAC screening and SSN validation.
  * In production, would integrate with real identity verification APIs.
+ *
+ * All external calls are wrapped with a circuit breaker to prevent
+ * cascading failures when the identity verification API is unavailable.
  */
 
 /** Mock OFAC/SDN list check */
@@ -34,42 +38,44 @@ function validateSSN(ssnLastFour) {
   };
 }
 
-/** Run full identity and fraud verification for an application */
+/** Run full identity and fraud verification for an application — circuit-breaker protected */
 async function runIdentityCheck(applicationId, userId) {
-  const application = await db('applications').where('id', applicationId).first();
-  if (!application) throw new Error('Application not found');
+  return identityCheckBreaker.exec(async () => {
+    const application = await db('applications').where('id', applicationId).first();
+    if (!application) throw new Error('Application not found');
 
-  const borrower = await db('borrowers').where('id', application.borrower_id).first();
-  if (!borrower) throw new Error('Borrower not found');
+    const borrower = await db('borrowers').where('id', application.borrower_id).first();
+    if (!borrower) throw new Error('Borrower not found');
 
-  const user = await db('users').where('id', borrower.user_id).first();
+    const user = await db('users').where('id', borrower.user_id).first();
 
-  // Run OFAC check
-  const ofacResult = checkOFAC(user.first_name, user.last_name);
+    // Run OFAC check
+    const ofacResult = checkOFAC(user.first_name, user.last_name);
 
-  // Run SSN validation
-  const ssnResult = validateSSN(borrower.ssn_last_four);
+    // Run SSN validation
+    const ssnResult = validateSSN(borrower.ssn_last_four);
 
-  const allPassed = ofacResult.passed && ssnResult.passed;
+    const allPassed = ofacResult.passed && ssnResult.passed;
 
-  if (allPassed) {
-    await db('applications').where('id', applicationId).update({ status: 'identity_verified' });
-  }
+    if (allPassed) {
+      await db('applications').where('id', applicationId).update({ status: 'identity_verified' });
+    }
 
-  await createAuditLog({
-    userId,
-    action: 'identity_check',
-    entityType: 'application',
-    entityId: applicationId,
-    details: { ofacResult, ssnResult, allPassed },
+    await createAuditLog({
+      userId,
+      action: 'identity_check',
+      entityType: 'application',
+      entityId: applicationId,
+      details: { ofacResult, ssnResult, allPassed },
+    });
+
+    console.log(`[IDENTITY] Check for application ${applicationId}: ${allPassed ? 'PASSED' : 'FAILED'}`);
+
+    return {
+      passed: allPassed,
+      checks: { ofac: ofacResult, ssn: ssnResult },
+    };
   });
-
-  console.log(`[IDENTITY] Check for application ${applicationId}: ${allPassed ? 'PASSED' : 'FAILED'}`);
-
-  return {
-    passed: allPassed,
-    checks: { ofac: ofacResult, ssn: ssnResult },
-  };
 }
 
 module.exports = { runIdentityCheck, checkOFAC, validateSSN };

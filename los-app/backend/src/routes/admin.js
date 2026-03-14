@@ -5,6 +5,7 @@ const { authenticate, authorize } = require('../middleware/auth');
 const { validateBody, schemas } = require('../middleware/validation');
 const { createAuditLog } = require('../utils/audit');
 const { saltRounds } = require('../config/auth');
+const cache = require('../config/cache');
 
 const router = express.Router();
 
@@ -105,30 +106,31 @@ router.put('/users/:id', authenticate, authorize('system_admin'), async (req, re
   }
 });
 
-/** GET /api/admin/roles - List all roles */
+/** GET /api/admin/roles - List all roles (cached) */
 router.get('/roles', authenticate, authorize('system_admin'), async (req, res) => {
   try {
-    const roles = await db('roles').orderBy('id');
+    const roles = await cache.getRoles();
     res.json(roles);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch roles' });
   }
 });
 
-/** GET /api/admin/branches - List all branches */
+/** GET /api/admin/branches - List all branches (cached) */
 router.get('/branches', authenticate, async (req, res) => {
   try {
-    const branches = await db('branches').orderBy('name');
+    const branches = await cache.getBranches();
     res.json(branches);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch branches' });
   }
 });
 
-/** POST /api/admin/branches - Create branch (admin) */
+/** POST /api/admin/branches - Create branch (admin) — invalidates branch cache */
 router.post('/branches', authenticate, authorize('system_admin'), async (req, res) => {
   try {
     const [branch] = await db('branches').insert(req.body).returning('*');
+    cache.invalidate('branches');
     await createAuditLog({
       userId: req.user.id,
       action: 'branch_created',
@@ -142,21 +144,22 @@ router.post('/branches', authenticate, authorize('system_admin'), async (req, re
   }
 });
 
-/** GET /api/admin/loan-products - List loan products */
+/** GET /api/admin/loan-products - List loan products (cached) */
 router.get('/loan-products', authenticate, async (req, res) => {
   try {
-    const products = await db('loan_products').orderBy('name');
+    const products = await cache.getLoanProducts();
     res.json(products);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch loan products' });
   }
 });
 
-/** PUT /api/admin/loan-products/:id - Update loan product */
+/** PUT /api/admin/loan-products/:id - Update loan product — invalidates product cache */
 router.put('/loan-products/:id', authenticate, authorize('system_admin'), async (req, res) => {
   try {
     const [product] = await db('loan_products').where('id', req.params.id).update(req.body).returning('*');
     if (!product) return res.status(404).json({ error: 'Product not found' });
+    cache.invalidate('loan_products');
 
     await createAuditLog({
       userId: req.user.id,
@@ -172,10 +175,10 @@ router.put('/loan-products/:id', authenticate, authorize('system_admin'), async 
   }
 });
 
-/** GET /api/admin/state-rules - List state rules */
+/** GET /api/admin/state-rules - List state rules (cached) */
 router.get('/state-rules', authenticate, async (req, res) => {
   try {
-    const rules = await db('state_rules').orderBy('state');
+    const rules = await cache.getStateRules();
     res.json(rules);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch state rules' });
@@ -193,6 +196,7 @@ router.put('/state-rules/:id', authenticate, authorize('compliance_officer', 'sy
     }).returning('*');
 
     if (!rule) return res.status(404).json({ error: 'State rule not found' });
+    cache.invalidate('state_rules');
 
     await createAuditLog({
       userId: req.user.id,
@@ -208,13 +212,14 @@ router.put('/state-rules/:id', authenticate, authorize('compliance_officer', 'sy
   }
 });
 
-/** POST /api/admin/state-rules - Create state rule */
+/** POST /api/admin/state-rules - Create state rule — invalidates state rules cache */
 router.post('/state-rules', authenticate, authorize('compliance_officer', 'system_admin'), async (req, res) => {
   try {
     const [rule] = await db('state_rules').insert({
       ...req.body,
       updated_by: req.user.id,
     }).returning('*');
+    cache.invalidate('state_rules');
 
     await createAuditLog({
       userId: req.user.id,

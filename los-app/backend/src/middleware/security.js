@@ -15,11 +15,12 @@ const { db } = require('../config/database');
 
 /**
  * Strict rate limiter for authentication endpoints.
- * Limits to 10 requests per 15-minute window to prevent brute-force attacks.
+ * Limits to 20 requests per 15-minute window to prevent brute-force attacks.
+ * Scaled up from 10 to support concurrent login waves (shift changes, etc.).
  */
 const authRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10,
+  max: parseInt(process.env.RATE_LIMIT_AUTH || '20'),
   message: {
     error: 'Too many authentication attempts. Please try again after 15 minutes.',
     retryAfter: 900,
@@ -38,7 +39,7 @@ const authRateLimiter = rateLimit({
  */
 const sensitiveOpRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 5,
+  max: parseInt(process.env.RATE_LIMIT_SENSITIVE || '10'),
   message: {
     error: 'Too many sensitive operations. Please try again later.',
     retryAfter: 900,
@@ -48,11 +49,12 @@ const sensitiveOpRateLimiter = rateLimit({
 });
 
 /**
- * General API rate limiter — more permissive than auth limiter.
+ * General API rate limiter — scaled for 5000+ concurrent users.
+ * 1000 requests per 15-minute window per IP.
  */
 const apiRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 300,
+  max: parseInt(process.env.RATE_LIMIT_API || '1000'),
   message: { error: 'Too many requests. Please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,

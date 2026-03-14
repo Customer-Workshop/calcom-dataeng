@@ -1,10 +1,14 @@
 const { db } = require('../config/database');
 const { createAuditLog } = require('../utils/audit');
 const { decrypt, isEncrypted } = require('../utils/encryption');
+const { creditBureauBreaker } = require('../config/circuitBreaker');
 
 /**
  * Mock credit bureau service. Simulates soft and hard credit pulls.
  * In production, this would integrate with Experian, Equifax, TransUnion APIs.
+ *
+ * All external calls are wrapped with a circuit breaker to prevent
+ * cascading failures when the bureau API is slow or unavailable.
  */
 
 /** Generate a mock credit score based on borrower financial profile */
@@ -58,76 +62,80 @@ function generateMockTradelines() {
   return tradelines;
 }
 
-/** Perform a soft credit pull (pre-qualification) */
+/** Perform a soft credit pull (pre-qualification) — circuit-breaker protected */
 async function softCreditPull(applicationId, borrowerId, userId) {
-  const borrower = await db('borrowers').where('id', borrowerId).first();
-  if (!borrower) throw new Error('Borrower not found');
+  return creditBureauBreaker.exec(async () => {
+    const borrower = await db('borrowers').where('id', borrowerId).first();
+    if (!borrower) throw new Error('Borrower not found');
 
-  const score = generateMockCreditScore(borrower);
-  const tradelines = generateMockTradelines();
+    const score = generateMockCreditScore(borrower);
+    const tradelines = generateMockTradelines();
 
-  const [report] = await db('credit_reports').insert({
-    application_id: applicationId,
-    borrower_id: borrowerId,
-    pull_type: 'soft',
-    bureau: 'experian',
-    score,
-    tradelines: JSON.stringify(tradelines),
-    inquiries: JSON.stringify([]),
-    public_records: JSON.stringify([]),
-    raw_response: JSON.stringify({ type: 'soft_pull', score, tradelines, generated: true }),
-    pulled_at: new Date(),
-  }).returning('*');
+    const [report] = await db('credit_reports').insert({
+      application_id: applicationId,
+      borrower_id: borrowerId,
+      pull_type: 'soft',
+      bureau: 'experian',
+      score,
+      tradelines: JSON.stringify(tradelines),
+      inquiries: JSON.stringify([]),
+      public_records: JSON.stringify([]),
+      raw_response: JSON.stringify({ type: 'soft_pull', score, tradelines, generated: true }),
+      pulled_at: new Date(),
+    }).returning('*');
 
-  await createAuditLog({
-    userId,
-    action: 'soft_credit_pull',
-    entityType: 'credit_report',
-    entityId: report.id,
-    details: { applicationId, borrowerId, score, pullType: 'soft' },
+    await createAuditLog({
+      userId,
+      action: 'soft_credit_pull',
+      entityType: 'credit_report',
+      entityId: report.id,
+      details: { applicationId, borrowerId, score, pullType: 'soft' },
+    });
+
+    console.log(`[CREDIT] Soft pull for application ${applicationId}: Score ${score}`);
+    return report;
   });
-
-  console.log(`[CREDIT] Soft pull for application ${applicationId}: Score ${score}`);
-  return report;
 }
 
-/** Perform a hard credit pull (full application) */
+/** Perform a hard credit pull (full application) — circuit-breaker protected */
 async function hardCreditPull(applicationId, borrowerId, userId) {
-  const borrower = await db('borrowers').where('id', borrowerId).first();
-  if (!borrower) throw new Error('Borrower not found');
+  return creditBureauBreaker.exec(async () => {
+    const borrower = await db('borrowers').where('id', borrowerId).first();
+    if (!borrower) throw new Error('Borrower not found');
 
-  const score = generateMockCreditScore(borrower);
-  const tradelines = generateMockTradelines();
-  const inquiries = [
-    { date: new Date().toISOString().split('T')[0], creditor: 'LOS System - Hard Pull' },
-  ];
+    const score = generateMockCreditScore(borrower);
+    const tradelines = generateMockTradelines();
+    const inquiries = [
+      { date: new Date().toISOString().split('T')[0], creditor: 'LOS System - Hard Pull' },
+    ];
 
-  const [report] = await db('credit_reports').insert({
-    application_id: applicationId,
-    borrower_id: borrowerId,
-    pull_type: 'hard',
-    bureau: ['experian', 'equifax', 'transunion'][Math.floor(Math.random() * 3)],
-    score,
-    tradelines: JSON.stringify(tradelines),
-    inquiries: JSON.stringify(inquiries),
-    public_records: JSON.stringify([]),
-    raw_response: JSON.stringify({ type: 'hard_pull', score, tradelines, inquiries, generated: true }),
-    pulled_at: new Date(),
-  }).returning('*');
+    const [report] = await db('credit_reports').insert({
+      application_id: applicationId,
+      borrower_id: borrowerId,
+      pull_type: 'hard',
+      bureau: ['experian', 'equifax', 'transunion'][Math.floor(Math.random() * 3)],
+      score,
+      tradelines: JSON.stringify(tradelines),
+      inquiries: JSON.stringify(inquiries),
+      public_records: JSON.stringify([]),
+      raw_response: JSON.stringify({ type: 'hard_pull', score, tradelines, inquiries, generated: true }),
+      pulled_at: new Date(),
+    }).returning('*');
 
-  // Update application status
-  await db('applications').where('id', applicationId).update({ status: 'credit_pulled' });
+    // Update application status
+    await db('applications').where('id', applicationId).update({ status: 'credit_pulled' });
 
-  await createAuditLog({
-    userId,
-    action: 'hard_credit_pull',
-    entityType: 'credit_report',
-    entityId: report.id,
-    details: { applicationId, borrowerId, score, pullType: 'hard' },
+    await createAuditLog({
+      userId,
+      action: 'hard_credit_pull',
+      entityType: 'credit_report',
+      entityId: report.id,
+      details: { applicationId, borrowerId, score, pullType: 'hard' },
+    });
+
+    console.log(`[CREDIT] Hard pull for application ${applicationId}: Score ${score}`);
+    return report;
   });
-
-  console.log(`[CREDIT] Hard pull for application ${applicationId}: Score ${score}`);
-  return report;
 }
 
 module.exports = { softCreditPull, hardCreditPull, generateMockCreditScore };

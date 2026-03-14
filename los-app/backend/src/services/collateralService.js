@@ -1,10 +1,14 @@
 const { db } = require('../config/database');
 const { createAuditLog } = require('../utils/audit');
+const { collateralValuationBreaker } = require('../config/circuitBreaker');
 
 /**
  * Mock vehicle valuation service.
  * Simulates NADA/KBB lookup based on VIN.
  * In production, would integrate with real NADA/KBB APIs.
+ *
+ * VIN lookup and valuation calls are wrapped with a circuit breaker
+ * to fail fast when the valuation API is unavailable.
  */
 
 /** VIN-based vehicle database (mock) */
@@ -81,18 +85,22 @@ function calculateValuation(vehicle) {
   };
 }
 
-/** Create or update collateral for an application */
+/** Create or update collateral for an application — circuit-breaker protected for valuation */
 async function upsertCollateral(applicationId, collateralData, userId) {
   let vehicleInfo = {};
   let valuation = {};
 
-  // Auto-populate from VIN if provided
+  // Auto-populate from VIN if provided (wrapped in circuit breaker for external API resilience)
   if (collateralData.vin && collateralData.type === 'vehicle') {
-    vehicleInfo = lookupVehicleByVIN(collateralData.vin);
-    valuation = calculateValuation({
-      ...vehicleInfo,
-      condition: collateralData.condition,
-      mileage: collateralData.mileage,
+    vehicleInfo = await collateralValuationBreaker.exec(() => {
+      return lookupVehicleByVIN(collateralData.vin);
+    });
+    valuation = await collateralValuationBreaker.exec(() => {
+      return calculateValuation({
+        ...vehicleInfo,
+        condition: collateralData.condition,
+        mileage: collateralData.mileage,
+      });
     });
   }
 
