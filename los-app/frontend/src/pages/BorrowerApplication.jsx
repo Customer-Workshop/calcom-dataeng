@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Send, AlertCircle } from 'lucide-react';
 import useStore from '../store/useStore';
@@ -13,11 +13,14 @@ export default function BorrowerApplication() {
   const [form, setForm] = useState({
     loan_product_id: '', requested_amount: '', term_months: '', purpose: '', state: 'TX',
     borrower_info: {
-      ssn_last_four: '', date_of_birth: '', address_street: '', address_city: '',
+      ssn_last_four: '', dob_month: '', dob_day: '', dob_year: '', address_street: '', address_city: '',
       address_state: 'TX', address_zip: '', employer_name: '', employment_status: 'employed',
       annual_income: '', monthly_debt_payments: '', income_source: 'salary', years_employed: '',
     },
   });
+  const [dobError, setDobError] = useState('');
+  const dayRef = useRef(null);
+  const yearRef = useRef(null);
 
   useEffect(() => {
     api.get('/admin/loan-products').then(res => setProducts(res.data)).catch(() => {});
@@ -27,9 +30,40 @@ export default function BorrowerApplication() {
     setForm(prev => ({ ...prev, borrower_info: { ...prev.borrower_info, [field]: value } }));
   };
 
+  const validateDob = () => {
+    const { dob_month, dob_day, dob_year } = form.borrower_info;
+    if (!dob_month || !dob_day || !dob_year) return '';
+    const month = parseInt(dob_month);
+    const day = parseInt(dob_day);
+    const year = parseInt(dob_year);
+    if (month < 1 || month > 12) return 'Month must be 1-12';
+    if (day < 1 || day > 31) return 'Day must be 1-31';
+    const currentYear = new Date().getFullYear();
+    if (year < 1920 || year > currentYear - 18) return `Year must be between 1920 and ${currentYear - 18}`;
+    const dob = new Date(year, month - 1, day);
+    if (dob.getMonth() !== month - 1) return 'Invalid date for this month';
+    const age = (new Date() - dob) / (365.25 * 24 * 60 * 60 * 1000);
+    if (age < 18) return 'Applicant must be at least 18 years old';
+    if (age > 120) return 'Please enter a valid birth year';
+    return '';
+  };
+
+  const handleDobChange = (field, value, maxLen, nextRef) => {
+    const numOnly = value.replace(/\D/g, '').slice(0, maxLen);
+    updateBorrowerInfo(field, numOnly);
+    if (numOnly.length === maxLen && nextRef?.current) {
+      nextRef.current.focus();
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    const dobErr = validateDob();
+    if (dobErr) { setDobError(dobErr); setStep(2); return; }
+    setDobError('');
+    const { dob_month, dob_day, dob_year, ...restBorrower } = form.borrower_info;
+    const date_of_birth = `${dob_year}-${dob_month.padStart(2, '0')}-${dob_day.padStart(2, '0')}`;
     try {
       const payload = {
         ...form,
@@ -37,7 +71,8 @@ export default function BorrowerApplication() {
         requested_amount: parseFloat(form.requested_amount),
         term_months: parseInt(form.term_months),
         borrower_info: {
-          ...form.borrower_info,
+          ...restBorrower,
+          date_of_birth,
           annual_income: parseFloat(form.borrower_info.annual_income) || 0,
           monthly_debt_payments: parseFloat(form.borrower_info.monthly_debt_payments) || 0,
           years_employed: parseInt(form.borrower_info.years_employed) || 0,
@@ -52,7 +87,10 @@ export default function BorrowerApplication() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Loan Application</h1>
+      <div className="mb-6">
+        <img src="/images/loan-application.svg" alt="Loan Application" className="w-full h-32 object-contain rounded-xl mb-4" />
+        <h1 className="text-2xl font-bold text-gray-900">Loan Application</h1>
+      </div>
 
       {/* Step indicator */}
       <div className="flex items-center mb-8">
@@ -130,8 +168,27 @@ export default function BorrowerApplication() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
-              <input type="date" value={form.borrower_info.date_of_birth} onChange={(e) => updateBorrowerInfo('date_of_birth', e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none" />
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <input type="text" inputMode="numeric" placeholder="MM" value={form.borrower_info.dob_month}
+                    onChange={(e) => handleDobChange('dob_month', e.target.value, 2, dayRef)}
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none text-center" maxLength={2} />
+                  <span className="text-xs text-gray-400 mt-0.5 block text-center">Month</span>
+                </div>
+                <div className="flex-1">
+                  <input type="text" inputMode="numeric" placeholder="DD" value={form.borrower_info.dob_day} ref={dayRef}
+                    onChange={(e) => handleDobChange('dob_day', e.target.value, 2, yearRef)}
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none text-center" maxLength={2} />
+                  <span className="text-xs text-gray-400 mt-0.5 block text-center">Day</span>
+                </div>
+                <div className="flex-[1.5]">
+                  <input type="text" inputMode="numeric" placeholder="YYYY" value={form.borrower_info.dob_year} ref={yearRef}
+                    onChange={(e) => { handleDobChange('dob_year', e.target.value, 4, null); setDobError(''); }}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none text-center ${dobError ? 'border-red-400 ring-1 ring-red-300' : ''}`} maxLength={4} />
+                  <span className="text-xs text-gray-400 mt-0.5 block text-center">Year</span>
+                </div>
+              </div>
+              {dobError && <p className="text-xs text-red-600 mt-1">{dobError}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Street Address</label>

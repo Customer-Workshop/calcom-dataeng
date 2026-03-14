@@ -46,10 +46,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-100 rounded-full mb-4">
-              <LogIn className="w-8 h-8 text-primary-600" />
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900">Republic Finance</h1>
+            <img src="/images/logo.svg" alt="Republic Finance" className="h-14 mx-auto mb-3" />
             <p className="text-gray-500 mt-1">Loan Origination System</p>
           </div>
 

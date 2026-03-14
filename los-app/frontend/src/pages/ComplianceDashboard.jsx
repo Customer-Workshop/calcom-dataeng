@@ -84,8 +84,12 @@ export default function ComplianceDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Compliance Panel</h1>
+      <div className="bg-gradient-to-r from-primary-700 to-primary-600 rounded-xl p-5 text-white flex items-center gap-4 mb-2">
+        <img src="/images/compliance.svg" alt="" className="h-20 rounded-lg hidden sm:block" />
+        <div>
+          <h1 className="text-xl font-bold">Compliance Panel</h1>
+          <p className="text-primary-200 text-sm mt-1">State rules configuration, audit trails, and adverse action tracking.</p>
+        </div>
       </div>
 
       {message && (

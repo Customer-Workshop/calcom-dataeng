@@ -37,8 +37,15 @@ export default function BranchManagerDashboard() {
 
   return (
     <div className="space-y-6">
+      <div className="bg-gradient-to-r from-primary-700 to-accent-500 rounded-xl p-5 text-white flex items-center gap-4 mb-2">
+        <img src="/images/loan-pipeline.svg" alt="" className="h-20 rounded-lg hidden sm:block" />
+        <div>
+          <h1 className="text-xl font-bold">Branch Pipeline</h1>
+          <p className="text-primary-200 text-sm mt-1">Team pipeline overview, approval authority, and loan reassignment.</p>
+        </div>
+      </div>
+
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Branch Pipeline</h1>
         <button onClick={() => { fetchApplications({ status: statusFilter || undefined, page }); fetchPipeline(); }}
           className="px-3 py-2 border rounded-lg text-sm hover:bg-gray-50 flex items-center text-gray-600">
           <RefreshCw className="w-4 h-4 mr-1" /> Refresh

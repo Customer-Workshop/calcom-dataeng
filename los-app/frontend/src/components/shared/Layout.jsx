@@ -57,7 +57,7 @@ export default function Layout() {
       <aside className={`fixed inset-y-0 left-0 z-30 w-64 bg-white shadow-lg transform transition-transform duration-200 lg:translate-x-0 lg:static lg:inset-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="h-full flex flex-col">
           <div className="flex items-center justify-between h-16 px-4 border-b bg-primary-700">
-            <h1 className="text-white font-bold text-lg">Republic Finance</h1>
+            <img src="/images/logo-white.svg" alt="Republic Finance" className="h-9" />
             <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-white">
               <X size={20} />
             </button>

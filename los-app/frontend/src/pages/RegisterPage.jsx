@@ -24,10 +24,7 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-600 to-primary-900 p-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8">
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-100 rounded-full mb-4">
-            <UserPlus className="w-8 h-8 text-primary-600" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">Republic Finance</h1>
+          <img src="/images/logo.svg" alt="Republic Finance" className="h-14 mx-auto mb-3" />
           <p className="text-gray-500 mt-1">Create your borrower account</p>
         </div>
         {error && (

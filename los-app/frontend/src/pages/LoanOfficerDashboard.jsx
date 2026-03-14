@@ -30,6 +30,15 @@ export default function LoanOfficerDashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Header Banner */}
+      <div className="bg-gradient-to-r from-primary-700 to-accent-500 rounded-xl p-5 text-white flex items-center gap-4">
+        <img src="/images/loan-pipeline.svg" alt="" className="h-20 rounded-lg hidden sm:block" />
+        <div>
+          <h1 className="text-xl font-bold">Loan Officer Pipeline</h1>
+          <p className="text-primary-200 text-sm mt-1">Manage applications, run credit checks, and process loan decisions.</p>
+        </div>
+      </div>
+
       {/* Pipeline Summary */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
         {pipeline.map(p => (

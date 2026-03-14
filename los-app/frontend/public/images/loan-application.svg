@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200" fill="none">
+  <!-- Background -->
+  <rect width="400" height="200" rx="12" fill="#f0f5fa"/>
+  <!-- Document -->
+  <rect x="140" y="20" width="120" height="160" rx="8" fill="white" stroke="#1B3A5C" stroke-width="2"/>
+  <rect x="155" y="40" width="90" height="6" rx="3" fill="#1B3A5C" opacity="0.3"/>
+  <rect x="155" y="55" width="70" height="4" rx="2" fill="#1B3A5C" opacity="0.15"/>
+  <rect x="155" y="65" width="80" height="4" rx="2" fill="#1B3A5C" opacity="0.15"/>
+  <rect x="155" y="80" width="90" height="6" rx="3" fill="#1B3A5C" opacity="0.3"/>
+  <rect x="155" y="95" width="60" height="4" rx="2" fill="#1B3A5C" opacity="0.15"/>
+  <rect x="155" y="105" width="75" height="4" rx="2" fill="#1B3A5C" opacity="0.15"/>
+  <rect x="155" y="115" width="50" height="4" rx="2" fill="#1B3A5C" opacity="0.15"/>
+  <!-- Checkmark circle -->
+  <circle cx="240" cy="150" r="18" fill="#006B7B"/>
+  <path d="M232 150 L238 156 L250 144" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Dollar sign -->
+  <circle cx="80" cy="60" r="30" fill="#1B3A5C" opacity="0.1"/>
+  <text x="80" y="68" font-family="Arial" font-weight="700" font-size="28" fill="#1B3A5C" text-anchor="middle">$</text>
+  <!-- Arrow -->
+  <path d="M310 100 L340 100" stroke="#006B7B" stroke-width="2" stroke-linecap="round"/>
+  <path d="M335 95 L345 100 L335 105" stroke="#006B7B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- House icon -->
+  <path d="M340 80 L360 65 L380 80 L380 105 L340 105 Z" fill="#1B3A5C" opacity="0.15" stroke="#1B3A5C" stroke-width="1.5"/>
+  <rect x="354" y="90" width="12" height="15" rx="1" fill="#006B7B" opacity="0.4"/>
+</svg>

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 160" fill="none">
+  <rect width="400" height="160" rx="12" fill="#f0f5fa"/>
+  <!-- Shield with checkmark -->
+  <path d="M180 25 L200 15 L220 25 L220 65 C220 85 200 100 200 100 C200 100 180 85 180 65 Z" fill="#1B3A5C" opacity="0.9"/>
+  <path d="M190 58 L198 66 L212 50" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Stars -->
+  <circle cx="60" cy="40" r="4" fill="#006B7B" opacity="0.3"/>
+  <circle cx="340" cy="50" r="5" fill="#006B7B" opacity="0.2"/>
+  <circle cx="100" cy="120" r="3" fill="#1B3A5C" opacity="0.2"/>
+  <circle cx="310" cy="110" r="4" fill="#1B3A5C" opacity="0.15"/>
+  <!-- Text -->
+  <text x="200" y="125" font-family="Arial" font-weight="700" font-size="14" fill="#1B3A5C" text-anchor="middle">Secure Loan Processing</text>
+  <text x="200" y="145" font-family="Arial" font-size="11" fill="#006B7B" text-anchor="middle" opacity="0.7">ECOA compliant decisioning engine</text>
+</svg>
