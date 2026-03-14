@@ -2,6 +2,8 @@ require('dotenv').config();
 const bcrypt = require('bcryptjs');
 const { db } = require('../config/database');
 const { v4: uuidv4 } = require('uuid');
+const { encrypt, hashValue } = require('../utils/encryption');
+const { saltRounds } = require('../config/auth');
 
 async function seed() {
   console.log('Seeding database...');
@@ -42,45 +44,62 @@ async function seed() {
     await db('branches').insert(branches);
     console.log('  Branches seeded');
 
-    // 3. Seed Users
-    const passwordHash = await bcrypt.hash('Password123!', 10);
+    // 3. Seed Users — unique strong passwords per account (bcrypt cost factor 12)
+    // Passwords are generated deterministically from a seed-specific derivation function
+    // to meet enterprise policy: min 12 chars, uppercase + lowercase + digit + special
+    const { generateSeedCredential } = require('../utils/seedCredentials');
+    const userKeys = [
+      'lo1', 'lo2', 'lo3', 'lo4', 'lo5', 'lo6', 'lo7', 'lo8', 'lo9', 'lo10',
+      'uw1', 'uw2', 'uw3',
+      'bm1', 'bm2', 'bm3', 'bm4', 'bm5',
+      'compliance', 'admin', 'exec',
+      'b1', 'b2', 'b3', 'b4', 'b5',
+    ];
+
+    // Hash all generated passwords with bcrypt cost factor 12
+    const hashes = {};
+    for (const key of userKeys) {
+      hashes[key] = await bcrypt.hash(generateSeedCredential(key), saltRounds);
+    }
+
+    const now = new Date();
     const users = [
       // Loan Officers (10)
-      { email: 'lo1@republicfinance.com', password_hash: passwordHash, first_name: 'Sarah', last_name: 'Johnson', phone: '512-555-1001', role_id: 2, branch_id: 1 },
-      { email: 'lo2@republicfinance.com', password_hash: passwordHash, first_name: 'Michael', last_name: 'Chen', phone: '512-555-1002', role_id: 2, branch_id: 1 },
-      { email: 'lo3@republicfinance.com', password_hash: passwordHash, first_name: 'Jessica', last_name: 'Williams', phone: '713-555-1003', role_id: 2, branch_id: 2 },
-      { email: 'lo4@republicfinance.com', password_hash: passwordHash, first_name: 'David', last_name: 'Brown', phone: '713-555-1004', role_id: 2, branch_id: 2 },
-      { email: 'lo5@republicfinance.com', password_hash: passwordHash, first_name: 'Emily', last_name: 'Davis', phone: '305-555-1005', role_id: 2, branch_id: 3 },
-      { email: 'lo6@republicfinance.com', password_hash: passwordHash, first_name: 'James', last_name: 'Wilson', phone: '305-555-1006', role_id: 2, branch_id: 3 },
-      { email: 'lo7@republicfinance.com', password_hash: passwordHash, first_name: 'Amanda', last_name: 'Taylor', phone: '407-555-1007', role_id: 2, branch_id: 4 },
-      { email: 'lo8@republicfinance.com', password_hash: passwordHash, first_name: 'Robert', last_name: 'Martinez', phone: '407-555-1008', role_id: 2, branch_id: 4 },
-      { email: 'lo9@republicfinance.com', password_hash: passwordHash, first_name: 'Lisa', last_name: 'Anderson', phone: '614-555-1009', role_id: 2, branch_id: 5 },
-      { email: 'lo10@republicfinance.com', password_hash: passwordHash, first_name: 'Christopher', last_name: 'Thomas', phone: '614-555-1010', role_id: 2, branch_id: 5 },
+      { email: 'lo1@republicfinance.com', password_hash: hashes.lo1, first_name: 'Sarah', last_name: 'Johnson', phone: '512-555-1001', role_id: 2, branch_id: 1, password_changed_at: now },
+      { email: 'lo2@republicfinance.com', password_hash: hashes.lo2, first_name: 'Michael', last_name: 'Chen', phone: '512-555-1002', role_id: 2, branch_id: 1, password_changed_at: now },
+      { email: 'lo3@republicfinance.com', password_hash: hashes.lo3, first_name: 'Jessica', last_name: 'Williams', phone: '713-555-1003', role_id: 2, branch_id: 2, password_changed_at: now },
+      { email: 'lo4@republicfinance.com', password_hash: hashes.lo4, first_name: 'David', last_name: 'Brown', phone: '713-555-1004', role_id: 2, branch_id: 2, password_changed_at: now },
+      { email: 'lo5@republicfinance.com', password_hash: hashes.lo5, first_name: 'Emily', last_name: 'Davis', phone: '305-555-1005', role_id: 2, branch_id: 3, password_changed_at: now },
+      { email: 'lo6@republicfinance.com', password_hash: hashes.lo6, first_name: 'James', last_name: 'Wilson', phone: '305-555-1006', role_id: 2, branch_id: 3, password_changed_at: now },
+      { email: 'lo7@republicfinance.com', password_hash: hashes.lo7, first_name: 'Amanda', last_name: 'Taylor', phone: '407-555-1007', role_id: 2, branch_id: 4, password_changed_at: now },
+      { email: 'lo8@republicfinance.com', password_hash: hashes.lo8, first_name: 'Robert', last_name: 'Martinez', phone: '407-555-1008', role_id: 2, branch_id: 4, password_changed_at: now },
+      { email: 'lo9@republicfinance.com', password_hash: hashes.lo9, first_name: 'Lisa', last_name: 'Anderson', phone: '614-555-1009', role_id: 2, branch_id: 5, password_changed_at: now },
+      { email: 'lo10@republicfinance.com', password_hash: hashes.lo10, first_name: 'Christopher', last_name: 'Thomas', phone: '614-555-1010', role_id: 2, branch_id: 5, password_changed_at: now },
       // Underwriters (3)
-      { email: 'uw1@republicfinance.com', password_hash: passwordHash, first_name: 'Patricia', last_name: 'Moore', phone: '512-555-2001', role_id: 4, branch_id: 1 },
-      { email: 'uw2@republicfinance.com', password_hash: passwordHash, first_name: 'Daniel', last_name: 'Jackson', phone: '305-555-2002', role_id: 4, branch_id: 3 },
-      { email: 'uw3@republicfinance.com', password_hash: passwordHash, first_name: 'Nancy', last_name: 'White', phone: '614-555-2003', role_id: 4, branch_id: 5 },
+      { email: 'uw1@republicfinance.com', password_hash: hashes.uw1, first_name: 'Patricia', last_name: 'Moore', phone: '512-555-2001', role_id: 4, branch_id: 1, password_changed_at: now },
+      { email: 'uw2@republicfinance.com', password_hash: hashes.uw2, first_name: 'Daniel', last_name: 'Jackson', phone: '305-555-2002', role_id: 4, branch_id: 3, password_changed_at: now },
+      { email: 'uw3@republicfinance.com', password_hash: hashes.uw3, first_name: 'Nancy', last_name: 'White', phone: '614-555-2003', role_id: 4, branch_id: 5, password_changed_at: now },
       // Branch Managers (5)
-      { email: 'bm1@republicfinance.com', password_hash: passwordHash, first_name: 'Richard', last_name: 'Harris', phone: '512-555-3001', role_id: 3, branch_id: 1 },
-      { email: 'bm2@republicfinance.com', password_hash: passwordHash, first_name: 'Karen', last_name: 'Clark', phone: '713-555-3002', role_id: 3, branch_id: 2 },
-      { email: 'bm3@republicfinance.com', password_hash: passwordHash, first_name: 'Thomas', last_name: 'Lewis', phone: '305-555-3003', role_id: 3, branch_id: 3 },
-      { email: 'bm4@republicfinance.com', password_hash: passwordHash, first_name: 'Sandra', last_name: 'Robinson', phone: '407-555-3004', role_id: 3, branch_id: 4 },
-      { email: 'bm5@republicfinance.com', password_hash: passwordHash, first_name: 'Mark', last_name: 'Walker', phone: '614-555-3005', role_id: 3, branch_id: 5 },
+      { email: 'bm1@republicfinance.com', password_hash: hashes.bm1, first_name: 'Richard', last_name: 'Harris', phone: '512-555-3001', role_id: 3, branch_id: 1, password_changed_at: now },
+      { email: 'bm2@republicfinance.com', password_hash: hashes.bm2, first_name: 'Karen', last_name: 'Clark', phone: '713-555-3002', role_id: 3, branch_id: 2, password_changed_at: now },
+      { email: 'bm3@republicfinance.com', password_hash: hashes.bm3, first_name: 'Thomas', last_name: 'Lewis', phone: '305-555-3003', role_id: 3, branch_id: 3, password_changed_at: now },
+      { email: 'bm4@republicfinance.com', password_hash: hashes.bm4, first_name: 'Sandra', last_name: 'Robinson', phone: '407-555-3004', role_id: 3, branch_id: 4, password_changed_at: now },
+      { email: 'bm5@republicfinance.com', password_hash: hashes.bm5, first_name: 'Mark', last_name: 'Walker', phone: '614-555-3005', role_id: 3, branch_id: 5, password_changed_at: now },
       // Compliance Officer
-      { email: 'compliance@republicfinance.com', password_hash: passwordHash, first_name: 'Helen', last_name: 'Young', phone: '512-555-4001', role_id: 5, branch_id: 1 },
+      { email: 'compliance@republicfinance.com', password_hash: hashes.compliance, first_name: 'Helen', last_name: 'Young', phone: '512-555-4001', role_id: 5, branch_id: 1, password_changed_at: now },
       // System Admin
-      { email: 'admin@republicfinance.com', password_hash: passwordHash, first_name: 'Marcus', last_name: 'Rivera', phone: '512-555-5001', role_id: 6, branch_id: 1 },
+      { email: 'admin@republicfinance.com', password_hash: hashes.admin, first_name: 'Marcus', last_name: 'Rivera', phone: '512-555-5001', role_id: 6, branch_id: 1, password_changed_at: now },
       // Executive
-      { email: 'exec@republicfinance.com', password_hash: passwordHash, first_name: 'Victoria', last_name: 'King', phone: '512-555-6001', role_id: 7, branch_id: 1 },
+      { email: 'exec@republicfinance.com', password_hash: hashes.exec, first_name: 'Victoria', last_name: 'King', phone: '512-555-6001', role_id: 7, branch_id: 1, password_changed_at: now },
       // Borrower users
-      { email: 'borrower1@example.com', password_hash: passwordHash, first_name: 'John', last_name: 'Smith', phone: '512-555-7001', role_id: 1, branch_id: null },
-      { email: 'borrower2@example.com', password_hash: passwordHash, first_name: 'Jane', last_name: 'Doe', phone: '713-555-7002', role_id: 1, branch_id: null },
-      { email: 'borrower3@example.com', password_hash: passwordHash, first_name: 'Robert', last_name: 'Wilson', phone: '305-555-7003', role_id: 1, branch_id: null },
-      { email: 'borrower4@example.com', password_hash: passwordHash, first_name: 'Maria', last_name: 'Garcia', phone: '407-555-7004', role_id: 1, branch_id: null },
-      { email: 'borrower5@example.com', password_hash: passwordHash, first_name: 'William', last_name: 'Lee', phone: '614-555-7005', role_id: 1, branch_id: null },
+      { email: 'borrower1@example.com', password_hash: hashes.b1, first_name: 'John', last_name: 'Smith', phone: '512-555-7001', role_id: 1, branch_id: null, password_changed_at: now },
+      { email: 'borrower2@example.com', password_hash: hashes.b2, first_name: 'Jane', last_name: 'Doe', phone: '713-555-7002', role_id: 1, branch_id: null, password_changed_at: now },
+      { email: 'borrower3@example.com', password_hash: hashes.b3, first_name: 'Robert', last_name: 'Wilson', phone: '305-555-7003', role_id: 1, branch_id: null, password_changed_at: now },
+      { email: 'borrower4@example.com', password_hash: hashes.b4, first_name: 'Maria', last_name: 'Garcia', phone: '407-555-7004', role_id: 1, branch_id: null, password_changed_at: now },
+      { email: 'borrower5@example.com', password_hash: hashes.b5, first_name: 'William', last_name: 'Lee', phone: '614-555-7005', role_id: 1, branch_id: null, password_changed_at: now },
     ];
     await db('users').insert(users);
-    console.log('  Users seeded');
+    console.log('  Users seeded (unique passwords, bcrypt cost factor 12)');
 
     // 4. Seed Loan Products
     const loanProducts = [
@@ -135,16 +154,16 @@ async function seed() {
     await db('state_rules').insert(stateRules);
     console.log('  State rules seeded');
 
-    // 6. Seed Borrowers
+    // 6. Seed Borrowers — PII fields encrypted with AES-256-GCM at rest
     const borrowers = [
-      { user_id: 22, ssn_last_four: '1234', ssn_hash: 'mock_hash_1', date_of_birth: '1985-03-15', address_street: '123 Main St', address_city: 'Austin', address_state: 'TX', address_zip: '78701', employer_name: 'Tech Corp', employment_status: 'employed', annual_income: 95000, monthly_debt_payments: 1200, income_source: 'salary', years_employed: 5 },
-      { user_id: 23, ssn_last_four: '5678', ssn_hash: 'mock_hash_2', date_of_birth: '1990-07-22', address_street: '456 Oak Ave', address_city: 'Houston', address_state: 'TX', address_zip: '77056', employer_name: 'Finance Inc', employment_status: 'employed', annual_income: 72000, monthly_debt_payments: 800, income_source: 'salary', years_employed: 3 },
-      { user_id: 24, ssn_last_four: '9012', ssn_hash: 'mock_hash_3', date_of_birth: '1978-11-05', address_street: '789 Palm Dr', address_city: 'Miami Beach', address_state: 'FL', address_zip: '33139', employer_name: 'Retired', employment_status: 'retired', annual_income: 48000, monthly_debt_payments: 400, income_source: 'pension', years_employed: 0 },
-      { user_id: 25, ssn_last_four: '3456', ssn_hash: 'mock_hash_4', date_of_birth: '1992-01-30', address_street: '321 Lake Rd', address_city: 'Orlando', address_state: 'FL', address_zip: '32801', employer_name: 'Self', employment_status: 'self_employed', annual_income: 110000, monthly_debt_payments: 2500, income_source: 'business', years_employed: 8 },
-      { user_id: 26, ssn_last_four: '7890', ssn_hash: 'mock_hash_5', date_of_birth: '1988-06-18', address_street: '555 Elm St', address_city: 'Columbus', address_state: 'OH', address_zip: '43215', employer_name: 'State of Ohio', employment_status: 'employed', annual_income: 65000, monthly_debt_payments: 600, income_source: 'salary', years_employed: 10 },
+      { user_id: 22, ssn_last_four: encrypt('1234'), ssn_hash: hashValue('1234'), date_of_birth: encrypt('1985-03-15'), address_street: '123 Main St', address_city: 'Austin', address_state: 'TX', address_zip: '78701', employer_name: 'Tech Corp', employment_status: 'employed', annual_income: encrypt('95000'), monthly_debt_payments: encrypt('1200'), income_source: 'salary', years_employed: 5 },
+      { user_id: 23, ssn_last_four: encrypt('5678'), ssn_hash: hashValue('5678'), date_of_birth: encrypt('1990-07-22'), address_street: '456 Oak Ave', address_city: 'Houston', address_state: 'TX', address_zip: '77056', employer_name: 'Finance Inc', employment_status: 'employed', annual_income: encrypt('72000'), monthly_debt_payments: encrypt('800'), income_source: 'salary', years_employed: 3 },
+      { user_id: 24, ssn_last_four: encrypt('9012'), ssn_hash: hashValue('9012'), date_of_birth: encrypt('1978-11-05'), address_street: '789 Palm Dr', address_city: 'Miami Beach', address_state: 'FL', address_zip: '33139', employer_name: 'Retired', employment_status: 'retired', annual_income: encrypt('48000'), monthly_debt_payments: encrypt('400'), income_source: 'pension', years_employed: 0 },
+      { user_id: 25, ssn_last_four: encrypt('3456'), ssn_hash: hashValue('3456'), date_of_birth: encrypt('1992-01-30'), address_street: '321 Lake Rd', address_city: 'Orlando', address_state: 'FL', address_zip: '32801', employer_name: 'Self', employment_status: 'self_employed', annual_income: encrypt('110000'), monthly_debt_payments: encrypt('2500'), income_source: 'business', years_employed: 8 },
+      { user_id: 26, ssn_last_four: encrypt('7890'), ssn_hash: hashValue('7890'), date_of_birth: encrypt('1988-06-18'), address_street: '555 Elm St', address_city: 'Columbus', address_state: 'OH', address_zip: '43215', employer_name: 'State of Ohio', employment_status: 'employed', annual_income: encrypt('65000'), monthly_debt_payments: encrypt('600'), income_source: 'salary', years_employed: 10 },
     ];
     await db('borrowers').insert(borrowers);
-    console.log('  Borrowers seeded');
+    console.log('  Borrowers seeded (PII encrypted with AES-256-GCM)');
 
     // 7. Seed Applications at various stages
     const applications = [

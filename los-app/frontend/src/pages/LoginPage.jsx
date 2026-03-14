@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { LogIn, AlertCircle } from 'lucide-react';
 import useStore from '../store/useStore';
+import { generateSeedCredential } from '../utils/seedCredentials';
 
 const DEMO_ACCOUNTS = [
-  { email: 'borrower1@example.com', role: 'Borrower', password: 'Password123!' },
-  { email: 'lo1@republicfinance.com', role: 'Loan Officer', password: 'Password123!' },
-  { email: 'bm1@republicfinance.com', role: 'Branch Manager', password: 'Password123!' },
-  { email: 'uw1@republicfinance.com', role: 'Underwriter', password: 'Password123!' },
-  { email: 'compliance@republicfinance.com', role: 'Compliance', password: 'Password123!' },
-  { email: 'admin@republicfinance.com', role: 'System Admin', password: 'Password123!' },
-  { email: 'exec@republicfinance.com', role: 'Executive', password: 'Password123!' },
+  { email: 'borrower1@example.com', role: 'Borrower', credKey: 'b1' },
+  { email: 'lo1@republicfinance.com', role: 'Loan Officer', credKey: 'lo1' },
+  { email: 'bm1@republicfinance.com', role: 'Branch Manager', credKey: 'bm1' },
+  { email: 'uw1@republicfinance.com', role: 'Underwriter', credKey: 'uw1' },
+  { email: 'compliance@republicfinance.com', role: 'Compliance', credKey: 'compliance' },
+  { email: 'admin@republicfinance.com', role: 'System Admin', credKey: 'admin' },
+  { email: 'exec@republicfinance.com', role: 'Executive', credKey: 'exec' },
 ];
 
 export default function LoginPage() {
@@ -38,7 +39,7 @@ export default function LoginPage() {
 
   const quickLogin = (account) => {
     setEmail(account.email);
-    setPassword(account.password);
+    setPassword(generateSeedCredential(account.credKey));
   };
 
   return (
@@ -89,7 +90,7 @@ export default function LoginPage() {
           </div>
 
           <div className="mt-6 border-t pt-4">
-            <p className="text-xs text-gray-500 mb-3 text-center">Quick Demo Login (all use Password123!)</p>
+            <p className="text-xs text-gray-500 mb-3 text-center">Quick Demo Login (unique passwords per account)</p>
             <div className="grid grid-cols-2 gap-2">
               {DEMO_ACCOUNTS.map((account) => (
                 <button

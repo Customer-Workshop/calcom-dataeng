@@ -11,6 +11,51 @@ const { upsertCollateral, calculateLTV } = require('../services/collateralServic
 const { generateTILADisclosure } = require('../services/tilaService');
 const { generateLoanAgreementPDF, generateAdverseActionPDF } = require('../utils/pdf');
 const { v4: uuidv4 } = require('uuid');
+const { encrypt, decrypt, isEncrypted, encryptFields, decryptFields, maskSensitive, hashValue } = require('../utils/encryption');
+
+// PII fields that are encrypted at rest in the borrowers table
+const BORROWER_ENCRYPTED_FIELDS = ['ssn_last_four', 'date_of_birth', 'annual_income', 'monthly_debt_payments'];
+
+/**
+ * Decrypt borrower PII fields for internal use (e.g., decisioning, display to authorized users).
+ * Returns numeric types for income/debt fields after decryption.
+ */
+function decryptBorrowerFields(obj) {
+  if (!obj) return obj;
+  decryptFields(obj, BORROWER_ENCRYPTED_FIELDS);
+  // Restore numeric types after decryption
+  if (obj.annual_income && !isNaN(obj.annual_income)) obj.annual_income = parseFloat(obj.annual_income);
+  if (obj.monthly_debt_payments && !isNaN(obj.monthly_debt_payments)) obj.monthly_debt_payments = parseFloat(obj.monthly_debt_payments);
+  return obj;
+}
+
+/**
+ * Encrypt borrower PII fields before database storage.
+ */
+function encryptBorrowerInfo(info) {
+  if (!info) return info;
+  const encrypted = { ...info };
+  if (encrypted.ssn_last_four) {
+    encrypted.ssn_hash = hashValue(encrypted.ssn_last_four);
+    encrypted.ssn_last_four = encrypt(String(encrypted.ssn_last_four));
+  }
+  if (encrypted.date_of_birth) encrypted.date_of_birth = encrypt(String(encrypted.date_of_birth));
+  if (encrypted.annual_income !== undefined) encrypted.annual_income = encrypt(String(encrypted.annual_income));
+  if (encrypted.monthly_debt_payments !== undefined) encrypted.monthly_debt_payments = encrypt(String(encrypted.monthly_debt_payments));
+  return encrypted;
+}
+
+/**
+ * Mask sensitive fields for API responses (SSN → ****1234).
+ */
+function maskBorrowerPII(obj) {
+  if (!obj) return obj;
+  if (obj.ssn_last_four) {
+    const plain = isEncrypted(obj.ssn_last_four) ? decrypt(obj.ssn_last_four) : obj.ssn_last_four;
+    obj.ssn_last_four_masked = '****' + String(plain).slice(-4);
+  }
+  return obj;
+}
 
 const router = express.Router();
 
@@ -115,6 +160,10 @@ router.get('/:id', authenticate, async (req, res) => {
 
     if (!application) return res.status(404).json({ error: 'Application not found' });
 
+    // Decrypt PII fields for authorized display
+    decryptBorrowerFields(application);
+    maskBorrowerPII(application);
+
     // Fetch related data
     const collateral = await db('collateral').where('application_id', req.params.id);
     const creditReports = await db('credit_reports').where('application_id', req.params.id).orderBy('created_at', 'desc');
@@ -151,16 +200,17 @@ router.post('/', authenticate, validateBody(schemas.application), async (req, re
   try {
     const { loan_product_id, requested_amount, term_months, purpose, state, borrower_info, co_borrower_info } = req.body;
 
-    // Create or update borrower profile
+    // Create or update borrower profile (encrypt PII before storage)
+    const encryptedInfo = encryptBorrowerInfo(borrower_info);
     let borrower = await db('borrowers').where('user_id', req.user.id).first();
     if (!borrower) {
       [borrower] = await db('borrowers').insert({
         user_id: req.user.id,
-        ...borrower_info,
+        ...encryptedInfo,
       }).returning('*');
-    } else if (borrower_info) {
+    } else if (encryptedInfo) {
       [borrower] = await db('borrowers').where('id', borrower.id).update({
-        ...borrower_info,
+        ...encryptedInfo,
         updated_at: new Date(),
       }).returning('*');
     }

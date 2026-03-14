@@ -2,8 +2,9 @@ require('dotenv').config();
 
 module.exports = {
   jwtSecret: process.env.JWT_SECRET || 'default-secret-change-me',
-  jwtExpiry: process.env.JWT_EXPIRY || '24h',
-  saltRounds: 10,
+  jwtExpiry: process.env.JWT_EXPIRY || '1h',
+  refreshTokenExpiry: process.env.REFRESH_TOKEN_EXPIRY || '7d',
+  saltRounds: 12,
   roles: {
     BORROWER: 'borrower',
     LOAN_OFFICER: 'loan_officer',

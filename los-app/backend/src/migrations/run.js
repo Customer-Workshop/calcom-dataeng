@@ -31,7 +31,7 @@ async function runMigrations() {
       table.timestamps(true, true);
     });
 
-    // 3. Users
+    // 3. Users (with enterprise security columns)
     await db.schema.createTableIfNotExists('users', (table) => {
       table.increments('id').primary();
       table.string('email').unique().notNullable();
@@ -43,6 +43,10 @@ async function runMigrations() {
       table.integer('branch_id').unsigned().references('id').inTable('branches');
       table.boolean('is_active').defaultTo(true);
       table.timestamp('last_login');
+      // Security columns for account lockout and password policy
+      table.integer('failed_login_attempts').defaultTo(0);
+      table.timestamp('locked_until');
+      table.timestamp('password_changed_at');
       table.timestamps(true, true);
     });
 
@@ -67,21 +71,21 @@ async function runMigrations() {
       table.timestamps(true, true);
     });
 
-    // 5. Borrowers
+    // 5. Borrowers (PII fields encrypted at application layer via AES-256-GCM)
     await db.schema.createTableIfNotExists('borrowers', (table) => {
       table.increments('id').primary();
       table.integer('user_id').unsigned().references('id').inTable('users');
-      table.string('ssn_last_four', 4);
-      table.string('ssn_hash');
-      table.date('date_of_birth');
+      table.text('ssn_last_four'); // Encrypted (AES-256-GCM)
+      table.string('ssn_hash'); // HMAC-SHA256 for lookup without decryption
+      table.text('date_of_birth'); // Encrypted (AES-256-GCM)
       table.string('address_street');
       table.string('address_city');
       table.string('address_state', 2);
       table.string('address_zip', 10);
       table.string('employer_name');
       table.string('employment_status'); // employed, self_employed, retired, unemployed
-      table.decimal('annual_income', 12, 2);
-      table.decimal('monthly_debt_payments', 12, 2).defaultTo(0);
+      table.text('annual_income'); // Encrypted (AES-256-GCM)
+      table.text('monthly_debt_payments'); // Encrypted (AES-256-GCM)
       table.string('income_source'); // salary, sso, pension, business, other
       table.integer('years_employed').defaultTo(0);
       table.timestamps(true, true);
