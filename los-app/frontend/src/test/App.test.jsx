@@ -49,7 +49,7 @@ describe('LoginPage', () => {
     const LoginPage = (await import('../pages/LoginPage')).default;
     render(<BrowserRouter><LoginPage /></BrowserRouter>);
     
-    expect(screen.getByText('Loan Origination System')).toBeDefined();
+    expect(screen.getByText('Republic Finance')).toBeDefined();
     expect(screen.getByText('Sign in to your account')).toBeDefined();
     expect(screen.getByPlaceholderText('you@example.com')).toBeDefined();
     expect(screen.getByPlaceholderText('Enter your password')).toBeDefined();
@@ -90,7 +90,7 @@ describe('RegisterPage', () => {
     render(<BrowserRouter><RegisterPage /></BrowserRouter>);
     
     expect(screen.getAllByText('Create Account').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText('Apply for a loan today')).toBeDefined();
+    expect(screen.getByText('Create your borrower account')).toBeDefined();
   });
 });
 
@@ -238,7 +238,7 @@ describe('Layout', () => {
       </BrowserRouter>
     );
     
-    expect(screen.getByText('LOS System')).toBeDefined();
+    expect(screen.getByText('Republic Finance')).toBeDefined();
     expect(screen.getByText('John Doe')).toBeDefined();
     expect(screen.getByText('Loan Officer')).toBeDefined();
     expect(screen.getByText('Sign Out')).toBeDefined();
