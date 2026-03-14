@@ -25,7 +25,7 @@ export default function UnderwriterDashboard() {
   return (
     <div className="space-y-6">
       <div className="bg-gradient-to-r from-primary-700 to-primary-600 rounded-xl p-5 text-white flex items-center gap-4 mb-2">
-        <img src="/images/underwriting.svg" alt="" className="h-20 rounded-lg hidden sm:block" />
+        <img src="/images/underwriting.svg" alt="" role="presentation" className="h-20 rounded-lg hidden sm:block" />
         <div>
           <h1 className="text-xl font-bold">Underwriter Review Queue</h1>
           <p className="text-primary-200 text-sm mt-1">Prioritized review, credit analysis, and risk-based decisioning.</p>
@@ -34,19 +34,20 @@ export default function UnderwriterDashboard() {
 
       <div className="flex items-center justify-between">
         <button onClick={() => fetchApplications({ status: statusFilter || undefined, limit: 50 })}
-          className="px-3 py-2 border rounded-lg text-sm hover:bg-gray-50 flex items-center text-gray-600">
-          <RefreshCw className="w-4 h-4 mr-1" /> Refresh
+          className="px-3 py-2 border rounded-lg text-sm hover:bg-gray-50 flex items-center text-gray-600"
+          aria-label="Refresh review queue">
+          <RefreshCw className="w-4 h-4 mr-1" aria-hidden="true" /> Refresh
         </button>
       </div>
 
       {/* Status filter tabs */}
-      <div className="flex flex-wrap gap-2">
-        <button onClick={() => setStatusFilter('')}
+      <div className="flex flex-wrap gap-2" role="tablist" aria-label="Filter by status">
+        <button onClick={() => setStatusFilter('')} role="tab" aria-selected={!statusFilter}
           className={`px-3 py-1.5 rounded-lg text-sm font-medium ${!statusFilter ? 'bg-primary-600 text-white' : 'bg-white border text-gray-600 hover:bg-gray-50'}`}>
           All
         </button>
         {uwStatuses.map(s => (
-          <button key={s} onClick={() => setStatusFilter(s)}
+          <button key={s} onClick={() => setStatusFilter(s)} role="tab" aria-selected={statusFilter === s}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium capitalize ${statusFilter === s ? 'bg-primary-600 text-white' : 'bg-white border text-gray-600 hover:bg-gray-50'}`}>
             {s.replace(/_/g, ' ')}
           </button>
@@ -54,18 +55,21 @@ export default function UnderwriterDashboard() {
       </div>
 
       {/* Queue */}
-      <div className="space-y-3">
+      <div className="space-y-3" role="list" aria-label="Review queue" aria-live="polite">
         {loading ? (
-          <div className="text-center py-12 text-gray-500">Loading...</div>
+          <div className="text-center py-12 text-gray-500" role="status">Loading...</div>
         ) : sortedApps.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-xl shadow-sm border">
-            <ClipboardCheck className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+            <ClipboardCheck className="w-12 h-12 text-gray-300 mx-auto mb-4" aria-hidden="true" />
             <h3 className="text-lg font-medium text-gray-900">Queue is Empty</h3>
             <p className="text-gray-500 mt-1">No applications match the current filter.</p>
           </div>
         ) : sortedApps.map(app => (
-          <div key={app.id} className="bg-white rounded-xl shadow-sm border p-5 hover:shadow-md transition-shadow cursor-pointer"
-            onClick={() => navigate(`/application/${app.id}`)}>
+          <article key={app.id} role="listitem" className="bg-white rounded-xl shadow-sm border p-5 hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => navigate(`/application/${app.id}`)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/application/${app.id}`); } }}
+            tabIndex={0}
+            aria-label={`Application ${app.application_number} - $${parseFloat(app.requested_amount).toLocaleString()}`}>
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-3">
@@ -73,7 +77,7 @@ export default function UnderwriterDashboard() {
                   <StatusBadge status={app.status} />
                   {parseFloat(app.requested_amount) > 100000 && (
                     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                      <AlertTriangle className="w-3 h-3 mr-1" /> High Value
+                      <AlertTriangle className="w-3 h-3 mr-1" aria-hidden="true" /> High Value
                     </span>
                   )}
                 </div>
@@ -93,7 +97,7 @@ export default function UnderwriterDashboard() {
                 <p className="text-xs text-gray-400">{new Date(app.created_at).toLocaleDateString()}</p>
               </div>
             </div>
-          </div>
+          </article>
         ))}
       </div>
     </div>

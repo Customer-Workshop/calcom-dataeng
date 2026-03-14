@@ -32,7 +32,7 @@ export default function LoanOfficerDashboard() {
     <div className="space-y-6">
       {/* Header Banner */}
       <div className="bg-gradient-to-r from-primary-700 to-accent-500 rounded-xl p-5 text-white flex items-center gap-4">
-        <img src="/images/loan-pipeline.svg" alt="" className="h-20 rounded-lg hidden sm:block" />
+        <img src="/images/loan-pipeline.svg" alt="" role="presentation" className="h-20 rounded-lg hidden sm:block" />
         <div>
           <h1 className="text-xl font-bold">Loan Officer Pipeline</h1>
           <p className="text-primary-200 text-sm mt-1">Manage applications, run credit checks, and process loan decisions.</p>
@@ -40,47 +40,51 @@ export default function LoanOfficerDashboard() {
       </div>
 
       {/* Pipeline Summary */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3" role="group" aria-label="Pipeline summary">
         {pipeline.map(p => (
-          <div key={p.status} className="bg-white rounded-lg shadow-sm border p-3 cursor-pointer hover:shadow-md"
-            onClick={() => setStatusFilter(p.status)}>
+          <button key={p.status} className="bg-white rounded-lg shadow-sm border p-3 cursor-pointer hover:shadow-md text-left"
+            onClick={() => setStatusFilter(p.status)}
+            aria-label={`Filter by ${p.status.replace(/_/g, ' ')}: ${p.count} applications, $${(parseFloat(p.total_amount) / 1000).toFixed(0)}k total`}>
             <p className="text-xs text-gray-500 capitalize">{p.status.replace(/_/g, ' ')}</p>
             <p className="text-2xl font-bold text-gray-900">{p.count}</p>
             <p className="text-xs text-gray-400">${(parseFloat(p.total_amount) / 1000).toFixed(0)}k</p>
-          </div>
+          </button>
         ))}
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3 items-center">
+      <div className="flex flex-wrap gap-3 items-center" role="search" aria-label="Filter applications">
         <div className="relative flex-1 min-w-48">
-          <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" aria-hidden="true" />
           <input type="text" placeholder="Search applications..." value={search} onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary-500 outline-none" />
+            className="w-full pl-10 pr-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+            aria-label="Search applications by number or borrower name" />
         </div>
-        <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+        <label htmlFor="lo-status-filter" className="sr-only">Filter by status</label>
+        <select id="lo-status-filter" value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
           className="px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary-500 outline-none">
           <option value="">All Statuses</option>
           {statuses.map(s => <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>)}
         </select>
         <button onClick={() => { fetchApplications({ status: statusFilter || undefined, page }); fetchPipeline(); }}
-          className="px-3 py-2 border rounded-lg text-sm hover:bg-gray-50 flex items-center text-gray-600">
-          <RefreshCw className="w-4 h-4 mr-1" /> Refresh
+          className="px-3 py-2 border rounded-lg text-sm hover:bg-gray-50 flex items-center text-gray-600"
+          aria-label="Refresh application list">
+          <RefreshCw className="w-4 h-4 mr-1" aria-hidden="true" /> Refresh
         </button>
       </div>
 
       {/* Applications Table */}
       <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-        <table className="w-full text-sm">
+        <table className="w-full text-sm" aria-label="Loan applications">
           <thead className="bg-gray-50 border-b">
             <tr>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Application</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Borrower</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Product</th>
-              <th className="px-4 py-3 text-right font-medium text-gray-500">Amount</th>
-              <th className="px-4 py-3 text-center font-medium text-gray-500">Status</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">State</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Created</th>
+              <th scope="col" className="px-4 py-3 text-left font-medium text-gray-500">Application</th>
+              <th scope="col" className="px-4 py-3 text-left font-medium text-gray-500">Borrower</th>
+              <th scope="col" className="px-4 py-3 text-left font-medium text-gray-500">Product</th>
+              <th scope="col" className="px-4 py-3 text-right font-medium text-gray-500">Amount</th>
+              <th scope="col" className="px-4 py-3 text-center font-medium text-gray-500">Status</th>
+              <th scope="col" className="px-4 py-3 text-left font-medium text-gray-500">State</th>
+              <th scope="col" className="px-4 py-3 text-left font-medium text-gray-500">Created</th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -89,7 +93,9 @@ export default function LoanOfficerDashboard() {
             ) : filteredApps.length === 0 ? (
               <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-500">No applications found</td></tr>
             ) : filteredApps.map(app => (
-              <tr key={app.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => navigate(`/application/${app.id}`)}>
+              <tr key={app.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => navigate(`/application/${app.id}`)}
+                onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/application/${app.id}`); }} tabIndex={0}
+                role="link" aria-label={`View application ${app.application_number}`}>
                 <td className="px-4 py-3 font-medium text-primary-600">{app.application_number}</td>
                 <td className="px-4 py-3">{app.borrower_first_name} {app.borrower_last_name}</td>
                 <td className="px-4 py-3">{app.product_name}</td>
@@ -102,15 +108,15 @@ export default function LoanOfficerDashboard() {
           </tbody>
         </table>
         {applicationsTotal > 20 && (
-          <div className="px-4 py-3 border-t flex items-center justify-between">
-            <p className="text-sm text-gray-500">Showing {filteredApps.length} of {applicationsTotal}</p>
+          <nav className="px-4 py-3 border-t flex items-center justify-between" aria-label="Pagination">
+            <p className="text-sm text-gray-500" aria-live="polite">Showing {filteredApps.length} of {applicationsTotal}</p>
             <div className="flex gap-2">
               <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1}
-                className="px-3 py-1 border rounded text-sm disabled:opacity-50">Prev</button>
+                className="px-3 py-1 border rounded text-sm disabled:opacity-50" aria-label="Previous page">Prev</button>
               <button onClick={() => setPage(p => p + 1)} disabled={filteredApps.length < 20}
-                className="px-3 py-1 border rounded text-sm disabled:opacity-50">Next</button>
+                className="px-3 py-1 border rounded text-sm disabled:opacity-50" aria-label="Next page">Next</button>
             </div>
-          </div>
+          </nav>
         )}
       </div>
     </div>

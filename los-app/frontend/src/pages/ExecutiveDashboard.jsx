@@ -47,7 +47,7 @@ export default function ExecutiveDashboard() {
   return (
     <div className="space-y-6">
       <div className="bg-gradient-to-r from-primary-700 to-primary-600 rounded-xl p-5 text-white flex items-center gap-4 mb-2">
-        <img src="/images/dashboard-kpi.svg" alt="" className="h-20 rounded-lg hidden sm:block" />
+        <img src="/images/dashboard-kpi.svg" alt="" role="presentation" className="h-20 rounded-lg hidden sm:block" />
         <div>
           <h1 className="text-xl font-bold">Executive Dashboard</h1>
           <p className="text-primary-200 text-sm mt-1">Key performance indicators, volume analytics, and portfolio metrics.</p>
@@ -56,29 +56,31 @@ export default function ExecutiveDashboard() {
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <select value={dateRange} onChange={(e) => setDateRange(e.target.value)}
-            className="px-3 py-2 border rounded-lg text-sm">
+          <label htmlFor="exec-date-range" className="sr-only">Date range</label>
+          <select id="exec-date-range" value={dateRange} onChange={(e) => setDateRange(e.target.value)}
+            className="px-3 py-2 border rounded-lg text-sm" aria-label="Select reporting date range">
             <option value="7">Last 7 days</option>
             <option value="30">Last 30 days</option>
             <option value="90">Last 90 days</option>
             <option value="365">Last year</option>
           </select>
           <button onClick={() => fetchDashboard({ days: dateRange })}
-            className="px-3 py-2 border rounded-lg text-sm hover:bg-gray-50 flex items-center text-gray-600">
-            <RefreshCw className="w-4 h-4 mr-1" /> Refresh
+            className="px-3 py-2 border rounded-lg text-sm hover:bg-gray-50 flex items-center text-gray-600"
+            aria-label="Refresh dashboard data">
+            <RefreshCw className="w-4 h-4 mr-1" aria-hidden="true" /> Refresh
           </button>
         </div>
       </div>
 
       {loading ? (
-        <div className="text-center py-12 text-gray-500">Loading dashboard data...</div>
+        <div className="text-center py-12 text-gray-500" role="status" aria-live="polite">Loading dashboard data...</div>
       ) : (
         <>
           {/* KPI Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4" role="group" aria-label="Key performance indicators">
             {kpis.map((kpi) => (
-              <div key={kpi.label} className="bg-white rounded-xl shadow-sm border p-4">
-                <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg mb-3 ${kpi.color}`}>
+              <div key={kpi.label} className="bg-white rounded-xl shadow-sm border p-4" aria-label={`${kpi.label}: ${kpi.value}`}>
+                <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg mb-3 ${kpi.color}`} aria-hidden="true">
                   <kpi.icon className="w-5 h-5" />
                 </div>
                 <p className="text-2xl font-bold text-gray-900">{kpi.value}</p>
@@ -90,7 +92,7 @@ export default function ExecutiveDashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Volume by State */}
             {volumeByState.length > 0 && (
-              <div className="bg-white rounded-xl shadow-sm border p-6">
+              <div className="bg-white rounded-xl shadow-sm border p-6" role="figure" aria-label="Bar chart showing application volume by state">
                 <h2 className="text-lg font-semibold mb-4">Volume by State</h2>
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={volumeByState}>
@@ -101,12 +103,18 @@ export default function ExecutiveDashboard() {
                     <Bar dataKey="applications" fill="#3b82f6" name="Applications" />
                   </BarChart>
                 </ResponsiveContainer>
+                <div className="sr-only">
+                  <table aria-label="Volume by state data">
+                    <thead><tr><th scope="col">State</th><th scope="col">Applications</th></tr></thead>
+                    <tbody>{volumeByState.map(s => <tr key={s.name}><td>{s.name}</td><td>{s.applications}</td></tr>)}</tbody>
+                  </table>
+                </div>
               </div>
             )}
 
             {/* Volume by Product */}
             {volumeByProduct.length > 0 && (
-              <div className="bg-white rounded-xl shadow-sm border p-6">
+              <div className="bg-white rounded-xl shadow-sm border p-6" role="figure" aria-label="Pie chart showing application volume by product">
                 <h2 className="text-lg font-semibold mb-4">Volume by Product</h2>
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
@@ -122,7 +130,7 @@ export default function ExecutiveDashboard() {
 
             {/* Volume by Branch */}
             {volumeByBranch.length > 0 && (
-              <div className="bg-white rounded-xl shadow-sm border p-6">
+              <div className="bg-white rounded-xl shadow-sm border p-6" role="figure" aria-label="Bar chart showing application volume by branch">
                 <h2 className="text-lg font-semibold mb-4">Volume by Branch</h2>
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={volumeByBranch} layout="vertical">
@@ -138,7 +146,7 @@ export default function ExecutiveDashboard() {
 
             {/* Status Breakdown */}
             {statusBreakdown.length > 0 && (
-              <div className="bg-white rounded-xl shadow-sm border p-6">
+              <div className="bg-white rounded-xl shadow-sm border p-6" role="figure" aria-label="Pie chart showing application status breakdown">
                 <h2 className="text-lg font-semibold mb-4">Application Status Breakdown</h2>
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>

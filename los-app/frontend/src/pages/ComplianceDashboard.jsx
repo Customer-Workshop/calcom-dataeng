@@ -85,7 +85,7 @@ export default function ComplianceDashboard() {
   return (
     <div className="space-y-6">
       <div className="bg-gradient-to-r from-primary-700 to-primary-600 rounded-xl p-5 text-white flex items-center gap-4 mb-2">
-        <img src="/images/compliance.svg" alt="" className="h-20 rounded-lg hidden sm:block" />
+        <img src="/images/compliance.svg" alt="" role="presentation" className="h-20 rounded-lg hidden sm:block" />
         <div>
           <h1 className="text-xl font-bold">Compliance Panel</h1>
           <p className="text-primary-200 text-sm mt-1">State rules configuration, audit trails, and adverse action tracking.</p>
@@ -93,15 +93,16 @@ export default function ComplianceDashboard() {
       </div>
 
       {message && (
-        <div className={`p-3 rounded-lg text-sm ${message.startsWith('Error') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
+        <div className={`p-3 rounded-lg text-sm ${message.startsWith('Error') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`} role="alert" aria-live="polite">
           {message}
         </div>
       )}
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-gray-100 p-1 rounded-lg w-fit">
+      <div className="flex gap-1 bg-gray-100 p-1 rounded-lg w-fit" role="tablist" aria-label="Compliance sections">
         {[{ key: 'rules', label: 'State Rules' }, { key: 'audit', label: 'Audit Trail' }, { key: 'adverse', label: 'Adverse Actions' }].map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)}
+          <button key={t.key} onClick={() => setTab(t.key)} role="tab" aria-selected={tab === t.key}
+            aria-controls={`panel-${t.key}`} id={`tab-${t.key}`}
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${tab === t.key ? 'bg-white shadow text-primary-700' : 'text-gray-600 hover:text-gray-800'}`}>
             {t.label}
           </button>
@@ -110,30 +111,49 @@ export default function ComplianceDashboard() {
 
       {/* State Rules */}
       {tab === 'rules' && (
-        <div className="space-y-4">
+        <div className="space-y-4" role="tabpanel" id="panel-rules" aria-labelledby="tab-rules">
           <button onClick={() => setShowNewRule(true)} className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm hover:bg-primary-700 flex items-center">
-            <Plus className="w-4 h-4 mr-1" /> Add State Rule
+            <Plus className="w-4 h-4 mr-1" aria-hidden="true" /> Add State Rule
           </button>
 
           {showNewRule && (
             <div className="bg-white rounded-xl shadow-sm border p-6 space-y-3">
               <h3 className="font-semibold">New State Rule</h3>
               <div className="grid grid-cols-2 gap-3">
-                <input type="text" placeholder="State Code (e.g., CA)" value={newRule.state_code} onChange={(e) => setNewRule({ ...newRule, state_code: e.target.value })}
-                  className="px-3 py-2 border rounded-lg text-sm" maxLength={2} />
-                <input type="text" placeholder="State Name" value={newRule.state_name} onChange={(e) => setNewRule({ ...newRule, state_name: e.target.value })}
-                  className="px-3 py-2 border rounded-lg text-sm" />
-                <input type="number" step="0.01" placeholder="Max Rate %" value={newRule.max_interest_rate} onChange={(e) => setNewRule({ ...newRule, max_interest_rate: e.target.value })}
-                  className="px-3 py-2 border rounded-lg text-sm" />
-                <input type="number" step="0.01" placeholder="Max Fee %" value={newRule.max_fee_percentage} onChange={(e) => setNewRule({ ...newRule, max_fee_percentage: e.target.value })}
-                  className="px-3 py-2 border rounded-lg text-sm" />
-                <input type="number" placeholder="Min Loan Amount" value={newRule.min_loan_amount} onChange={(e) => setNewRule({ ...newRule, min_loan_amount: e.target.value })}
-                  className="px-3 py-2 border rounded-lg text-sm" />
-                <input type="number" placeholder="Max Loan Amount" value={newRule.max_loan_amount} onChange={(e) => setNewRule({ ...newRule, max_loan_amount: e.target.value })}
-                  className="px-3 py-2 border rounded-lg text-sm" />
+                <div>
+                  <label htmlFor="new-state-code" className="sr-only">State Code</label>
+                  <input id="new-state-code" type="text" placeholder="State Code (e.g., CA)" value={newRule.state_code} onChange={(e) => setNewRule({ ...newRule, state_code: e.target.value })}
+                    className="px-3 py-2 border rounded-lg text-sm" maxLength={2} aria-label="State code" />
+                </div>
+                <div>
+                  <label htmlFor="new-state-name" className="sr-only">State Name</label>
+                  <input id="new-state-name" type="text" placeholder="State Name" value={newRule.state_name} onChange={(e) => setNewRule({ ...newRule, state_name: e.target.value })}
+                    className="px-3 py-2 border rounded-lg text-sm" aria-label="State name" />
+                </div>
+                <div>
+                  <label htmlFor="new-max-rate" className="sr-only">Max Rate %</label>
+                  <input id="new-max-rate" type="number" step="0.01" placeholder="Max Rate %" value={newRule.max_interest_rate} onChange={(e) => setNewRule({ ...newRule, max_interest_rate: e.target.value })}
+                    className="px-3 py-2 border rounded-lg text-sm" aria-label="Maximum interest rate percentage" />
+                </div>
+                <div>
+                  <label htmlFor="new-max-fee" className="sr-only">Max Fee %</label>
+                  <input id="new-max-fee" type="number" step="0.01" placeholder="Max Fee %" value={newRule.max_fee_percentage} onChange={(e) => setNewRule({ ...newRule, max_fee_percentage: e.target.value })}
+                    className="px-3 py-2 border rounded-lg text-sm" aria-label="Maximum fee percentage" />
+                </div>
+                <div>
+                  <label htmlFor="new-min-loan" className="sr-only">Min Loan Amount</label>
+                  <input id="new-min-loan" type="number" placeholder="Min Loan Amount" value={newRule.min_loan_amount} onChange={(e) => setNewRule({ ...newRule, min_loan_amount: e.target.value })}
+                    className="px-3 py-2 border rounded-lg text-sm" aria-label="Minimum loan amount" />
+                </div>
+                <div>
+                  <label htmlFor="new-max-loan" className="sr-only">Max Loan Amount</label>
+                  <input id="new-max-loan" type="number" placeholder="Max Loan Amount" value={newRule.max_loan_amount} onChange={(e) => setNewRule({ ...newRule, max_loan_amount: e.target.value })}
+                    className="px-3 py-2 border rounded-lg text-sm" aria-label="Maximum loan amount" />
+                </div>
               </div>
-              <textarea placeholder="Required disclosures" value={newRule.required_disclosures} onChange={(e) => setNewRule({ ...newRule, required_disclosures: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg text-sm" rows={2} />
+              <label htmlFor="new-disclosures" className="sr-only">Required disclosures</label>
+              <textarea id="new-disclosures" placeholder="Required disclosures" value={newRule.required_disclosures} onChange={(e) => setNewRule({ ...newRule, required_disclosures: e.target.value })}
+                className="w-full px-3 py-2 border rounded-lg text-sm" rows={2} aria-label="Required disclosures" />
               <div className="flex gap-3">
                 <button onClick={() => setShowNewRule(false)} className="px-4 py-2 border rounded-lg text-sm">Cancel</button>
                 <button onClick={createRule} className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm">Create</button>
@@ -148,37 +168,38 @@ export default function ComplianceDashboard() {
                   {editRule === rule.id ? (
                     <div className="space-y-3">
                       <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-xs text-gray-500">Max Rate %</label>
-                          <input type="number" step="0.01" value={rule.max_interest_rate || ''} onChange={(e) => setStateRules(prev => prev.map(r => r.id === rule.id ? { ...r, max_interest_rate: e.target.value } : r))}
-                            className="w-full px-3 py-2 border rounded-lg text-sm" />
-                        </div>
-                        <div>
-                          <label className="text-xs text-gray-500">Max Fee %</label>
-                          <input type="number" step="0.01" value={rule.max_fee_percentage || ''} onChange={(e) => setStateRules(prev => prev.map(r => r.id === rule.id ? { ...r, max_fee_percentage: e.target.value } : r))}
-                            className="w-full px-3 py-2 border rounded-lg text-sm" />
-                        </div>
-                        <div>
-                          <label className="text-xs text-gray-500">Min Loan $</label>
-                          <input type="number" value={rule.min_loan_amount || ''} onChange={(e) => setStateRules(prev => prev.map(r => r.id === rule.id ? { ...r, min_loan_amount: e.target.value } : r))}
-                            className="w-full px-3 py-2 border rounded-lg text-sm" />
-                        </div>
-                        <div>
-                          <label className="text-xs text-gray-500">Max Loan $</label>
-                          <input type="number" value={rule.max_loan_amount || ''} onChange={(e) => setStateRules(prev => prev.map(r => r.id === rule.id ? { ...r, max_loan_amount: e.target.value } : r))}
-                            className="w-full px-3 py-2 border rounded-lg text-sm" />
-                        </div>
+                          <div>
+                            <label htmlFor={`edit-max-rate-${rule.id}`} className="text-xs text-gray-500">Max Rate %</label>
+                            <input id={`edit-max-rate-${rule.id}`} type="number" step="0.01" value={rule.max_interest_rate || ''} onChange={(e) => setStateRules(prev => prev.map(r => r.id === rule.id ? { ...r, max_interest_rate: e.target.value } : r))}
+                              className="w-full px-3 py-2 border rounded-lg text-sm" />
+                          </div>
+                          <div>
+                            <label htmlFor={`edit-max-fee-${rule.id}`} className="text-xs text-gray-500">Max Fee %</label>
+                            <input id={`edit-max-fee-${rule.id}`} type="number" step="0.01" value={rule.max_fee_percentage || ''} onChange={(e) => setStateRules(prev => prev.map(r => r.id === rule.id ? { ...r, max_fee_percentage: e.target.value } : r))}
+                              className="w-full px-3 py-2 border rounded-lg text-sm" />
+                          </div>
+                          <div>
+                            <label htmlFor={`edit-min-loan-${rule.id}`} className="text-xs text-gray-500">Min Loan $</label>
+                            <input id={`edit-min-loan-${rule.id}`} type="number" value={rule.min_loan_amount || ''} onChange={(e) => setStateRules(prev => prev.map(r => r.id === rule.id ? { ...r, min_loan_amount: e.target.value } : r))}
+                              className="w-full px-3 py-2 border rounded-lg text-sm" />
+                          </div>
+                          <div>
+                            <label htmlFor={`edit-max-loan-${rule.id}`} className="text-xs text-gray-500">Max Loan $</label>
+                            <input id={`edit-max-loan-${rule.id}`} type="number" value={rule.max_loan_amount || ''} onChange={(e) => setStateRules(prev => prev.map(r => r.id === rule.id ? { ...r, max_loan_amount: e.target.value } : r))}
+                              className="w-full px-3 py-2 border rounded-lg text-sm" />
+                          </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <label className="text-sm">Enabled:</label>
-                        <input type="checkbox" checked={rule.is_enabled} onChange={(e) => setStateRules(prev => prev.map(r => r.id === rule.id ? { ...r, is_enabled: e.target.checked } : r))} />
+                        <label htmlFor={`edit-enabled-${rule.id}`} className="text-sm">Enabled:</label>
+                        <input id={`edit-enabled-${rule.id}`} type="checkbox" checked={rule.is_enabled} onChange={(e) => setStateRules(prev => prev.map(r => r.id === rule.id ? { ...r, is_enabled: e.target.checked } : r))} />
                       </div>
-                      <textarea value={rule.required_disclosures || ''} onChange={(e) => setStateRules(prev => prev.map(r => r.id === rule.id ? { ...r, required_disclosures: e.target.value } : r))}
+                      <label htmlFor={`edit-disclosures-${rule.id}`} className="sr-only">Required disclosures</label>
+                      <textarea id={`edit-disclosures-${rule.id}`} value={rule.required_disclosures || ''} onChange={(e) => setStateRules(prev => prev.map(r => r.id === rule.id ? { ...r, required_disclosures: e.target.value } : r))}
                         className="w-full px-3 py-2 border rounded-lg text-sm" rows={2} placeholder="Required disclosures" />
                       <div className="flex gap-2">
                         <button onClick={() => setEditRule(null)} className="px-3 py-1.5 border rounded text-sm">Cancel</button>
                         <button onClick={() => saveRule(rule)} className="px-3 py-1.5 bg-primary-600 text-white rounded text-sm flex items-center">
-                          <Save className="w-3 h-3 mr-1" /> Save
+                          <Save className="w-3 h-3 mr-1" aria-hidden="true" /> Save
                         </button>
                       </div>
                     </div>
@@ -196,7 +217,7 @@ export default function ComplianceDashboard() {
                           Loan: ${parseFloat(rule.min_loan_amount || 0).toLocaleString()} - ${parseFloat(rule.max_loan_amount || 0).toLocaleString()}
                         </p>
                       </div>
-                      <button onClick={() => setEditRule(rule.id)} className="px-3 py-1.5 border rounded text-sm hover:bg-gray-50">Edit</button>
+                      <button onClick={() => setEditRule(rule.id)} className="px-3 py-1.5 border rounded text-sm hover:bg-gray-50" aria-label={`Edit ${rule.state_name} rules`}>Edit</button>
                     </div>
                   )}
                 </div>
@@ -208,23 +229,24 @@ export default function ComplianceDashboard() {
 
       {/* Audit Trail */}
       {tab === 'audit' && (
-        <div className="space-y-4">
-          <div className="flex gap-3">
-            <input type="text" placeholder="Filter by action..." value={auditFilter} onChange={(e) => setAuditFilter(e.target.value)}
-              className="px-3 py-2 border rounded-lg text-sm flex-1" />
+        <div className="space-y-4" role="tabpanel" id="panel-audit" aria-labelledby="tab-audit">
+          <div className="flex gap-3" role="search" aria-label="Filter audit logs">
+            <label htmlFor="audit-filter" className="sr-only">Filter by action</label>
+            <input id="audit-filter" type="text" placeholder="Filter by action..." value={auditFilter} onChange={(e) => setAuditFilter(e.target.value)}
+              className="px-3 py-2 border rounded-lg text-sm flex-1" aria-label="Filter audit logs by action" />
             <button onClick={loadAudit} className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm flex items-center">
-              <Search className="w-4 h-4 mr-1" /> Search
+              <Search className="w-4 h-4 mr-1" aria-hidden="true" /> Search
             </button>
           </div>
           <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm" aria-label="Audit trail logs">
               <thead className="bg-gray-50 border-b">
                 <tr>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Timestamp</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">User</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Action</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Entity</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Details</th>
+                  <th scope="col" className="px-4 py-3 text-left font-medium text-gray-500">Timestamp</th>
+                  <th scope="col" className="px-4 py-3 text-left font-medium text-gray-500">User</th>
+                  <th scope="col" className="px-4 py-3 text-left font-medium text-gray-500">Action</th>
+                  <th scope="col" className="px-4 py-3 text-left font-medium text-gray-500">Entity</th>
+                  <th scope="col" className="px-4 py-3 text-left font-medium text-gray-500">Details</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -249,10 +271,10 @@ export default function ComplianceDashboard() {
 
       {/* Adverse Actions */}
       {tab === 'adverse' && (
-        <div className="space-y-4">
-          {loading ? <div className="text-center py-8 text-gray-500">Loading...</div> : adverseActions.length === 0 ? (
+        <div className="space-y-4" role="tabpanel" id="panel-adverse" aria-labelledby="tab-adverse">
+          {loading ? <div className="text-center py-8 text-gray-500" role="status">Loading...</div> : adverseActions.length === 0 ? (
             <div className="text-center py-12 bg-white rounded-xl shadow-sm border">
-              <Shield className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+              <Shield className="w-12 h-12 text-gray-300 mx-auto mb-4" aria-hidden="true" />
               <p className="text-gray-500">No adverse actions recorded</p>
             </div>
           ) : adverseActions.map(aa => (

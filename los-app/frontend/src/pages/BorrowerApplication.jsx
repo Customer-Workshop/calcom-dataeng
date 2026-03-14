@@ -93,57 +93,64 @@ export default function BorrowerApplication() {
       </div>
 
       {/* Step indicator */}
-      <div className="flex items-center mb-8">
-        {['Loan Details', 'Personal Info', 'Income & Employment'].map((label, i) => (
-          <div key={label} className="flex items-center flex-1">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step > i + 1 ? 'bg-green-500 text-white' : step === i + 1 ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-500'}`}>
-              {i + 1}
-            </div>
-            <span className={`ml-2 text-sm ${step === i + 1 ? 'text-primary-700 font-medium' : 'text-gray-500'}`}>{label}</span>
-            {i < 2 && <div className="flex-1 h-px bg-gray-200 mx-3" />}
-          </div>
-        ))}
-      </div>
+      <nav aria-label="Application progress" className="mb-8">
+        <ol className="flex items-center" role="list">
+          {['Loan Details', 'Personal Info', 'Income & Employment'].map((label, i) => (
+            <li key={label} className="flex items-center flex-1" aria-current={step === i + 1 ? 'step' : undefined}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step > i + 1 ? 'bg-green-500 text-white' : step === i + 1 ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-500'}`}
+                aria-hidden="true">
+                {i + 1}
+              </div>
+              <span className={`ml-2 text-sm ${step === i + 1 ? 'text-primary-700 font-medium' : 'text-gray-500'}`}>
+                <span className="sr-only">Step {i + 1}{step > i + 1 ? ' (completed)' : step === i + 1 ? ' (current)' : ''}: </span>
+                {label}
+              </span>
+              {i < 2 && <div className="flex-1 h-px bg-gray-200 mx-3" aria-hidden="true" />}
+            </li>
+          ))}
+        </ol>
+        <div aria-live="polite" className="sr-only">Step {step} of 3</div>
+      </nav>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center text-red-700 text-sm">
-          <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />{error}
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center text-red-700 text-sm" role="alert" aria-live="assertive">
+          <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" aria-hidden="true" />{error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border p-6">
+      <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border p-6" aria-label="Loan application form">
         {/* Step 1: Loan Details */}
         {step === 1 && (
-          <div className="space-y-4">
-            <h2 className="text-lg font-semibold">Loan Details</h2>
+          <fieldset className="space-y-4">
+            <legend className="text-lg font-semibold">Loan Details</legend>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Loan Product</label>
-              <select value={form.loan_product_id} onChange={(e) => setForm({ ...form, loan_product_id: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none" required>
+              <label htmlFor="loan-product" className="block text-sm font-medium text-gray-700 mb-1">Loan Product</label>
+              <select id="loan-product" value={form.loan_product_id} onChange={(e) => setForm({ ...form, loan_product_id: e.target.value })}
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none" required aria-required="true">
                 <option value="">Select a product</option>
                 {products.map(p => <option key={p.id} value={p.id}>{p.name} ({p.min_rate}% - {p.max_rate}%)</option>)}
               </select>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Loan Amount ($)</label>
-                <input type="number" value={form.requested_amount} onChange={(e) => setForm({ ...form, requested_amount: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none" required min="1000" />
+                <label htmlFor="loan-amount" className="block text-sm font-medium text-gray-700 mb-1">Loan Amount ($)</label>
+                <input id="loan-amount" type="number" value={form.requested_amount} onChange={(e) => setForm({ ...form, requested_amount: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none" required min="1000" aria-required="true" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Term (months)</label>
-                <input type="number" value={form.term_months} onChange={(e) => setForm({ ...form, term_months: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none" required min="12" max="360" />
+                <label htmlFor="loan-term" className="block text-sm font-medium text-gray-700 mb-1">Term (months)</label>
+                <input id="loan-term" type="number" value={form.term_months} onChange={(e) => setForm({ ...form, term_months: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none" required min="12" max="360" aria-required="true" />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Purpose</label>
-              <input type="text" value={form.purpose} onChange={(e) => setForm({ ...form, purpose: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none" required placeholder="e.g., Vehicle purchase, Home improvement" />
+              <label htmlFor="loan-purpose" className="block text-sm font-medium text-gray-700 mb-1">Purpose</label>
+              <input id="loan-purpose" type="text" value={form.purpose} onChange={(e) => setForm({ ...form, purpose: e.target.value })}
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none" required placeholder="e.g., Vehicle purchase, Home improvement" aria-required="true" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
-              <select value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })}
+              <label htmlFor="loan-state" className="block text-sm font-medium text-gray-700 mb-1">State</label>
+              <select id="loan-state" value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })}
                 className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none">
                 <option value="TX">Texas</option>
                 <option value="FL">Florida</option>
@@ -154,80 +161,86 @@ export default function BorrowerApplication() {
               className="w-full py-2.5 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors">
               Next: Personal Info
             </button>
-          </div>
+          </fieldset>
         )}
 
         {/* Step 2: Personal Info */}
         {step === 2 && (
-          <div className="space-y-4">
-            <h2 className="text-lg font-semibold">Personal Information</h2>
+          <fieldset className="space-y-4">
+            <legend className="text-lg font-semibold">Personal Information</legend>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">SSN (last 4 digits)</label>
-              <input type="text" value={form.borrower_info.ssn_last_four} onChange={(e) => updateBorrowerInfo('ssn_last_four', e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none" maxLength={4} pattern="\d{4}" placeholder="1234" />
+              <label htmlFor="ssn-last4" className="block text-sm font-medium text-gray-700 mb-1">SSN (last 4 digits)</label>
+              <input id="ssn-last4" type="text" value={form.borrower_info.ssn_last_four} onChange={(e) => updateBorrowerInfo('ssn_last_four', e.target.value)}
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none" maxLength={4} pattern="\d{4}" placeholder="1234" autoComplete="off" />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
-              <div className="flex gap-2">
+            <fieldset>
+              <legend className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</legend>
+              <div className="flex gap-2" role="group" aria-describedby={dobError ? 'dob-error' : undefined}>
                 <div className="flex-1">
-                  <input type="text" inputMode="numeric" placeholder="MM" value={form.borrower_info.dob_month}
+                  <label htmlFor="dob-month" className="sr-only">Month</label>
+                  <input id="dob-month" type="text" inputMode="numeric" placeholder="MM" value={form.borrower_info.dob_month}
                     onChange={(e) => handleDobChange('dob_month', e.target.value, 2, dayRef)}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none text-center" maxLength={2} />
-                  <span className="text-xs text-gray-400 mt-0.5 block text-center">Month</span>
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none text-center" maxLength={2}
+                    aria-label="Birth month" aria-invalid={dobError ? 'true' : undefined} />
+                  <span className="text-xs text-gray-400 mt-0.5 block text-center" aria-hidden="true">Month</span>
                 </div>
                 <div className="flex-1">
-                  <input type="text" inputMode="numeric" placeholder="DD" value={form.borrower_info.dob_day} ref={dayRef}
+                  <label htmlFor="dob-day" className="sr-only">Day</label>
+                  <input id="dob-day" type="text" inputMode="numeric" placeholder="DD" value={form.borrower_info.dob_day} ref={dayRef}
                     onChange={(e) => handleDobChange('dob_day', e.target.value, 2, yearRef)}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none text-center" maxLength={2} />
-                  <span className="text-xs text-gray-400 mt-0.5 block text-center">Day</span>
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none text-center" maxLength={2}
+                    aria-label="Birth day" aria-invalid={dobError ? 'true' : undefined} />
+                  <span className="text-xs text-gray-400 mt-0.5 block text-center" aria-hidden="true">Day</span>
                 </div>
                 <div className="flex-[1.5]">
-                  <input type="text" inputMode="numeric" placeholder="YYYY" value={form.borrower_info.dob_year} ref={yearRef}
+                  <label htmlFor="dob-year" className="sr-only">Year</label>
+                  <input id="dob-year" type="text" inputMode="numeric" placeholder="YYYY" value={form.borrower_info.dob_year} ref={yearRef}
                     onChange={(e) => { handleDobChange('dob_year', e.target.value, 4, null); setDobError(''); }}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none text-center ${dobError ? 'border-red-400 ring-1 ring-red-300' : ''}`} maxLength={4} />
-                  <span className="text-xs text-gray-400 mt-0.5 block text-center">Year</span>
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none text-center ${dobError ? 'border-red-400 ring-1 ring-red-300' : ''}`} maxLength={4}
+                    aria-label="Birth year" aria-invalid={dobError ? 'true' : undefined} />
+                  <span className="text-xs text-gray-400 mt-0.5 block text-center" aria-hidden="true">Year</span>
                 </div>
               </div>
-              {dobError && <p className="text-xs text-red-600 mt-1">{dobError}</p>}
-            </div>
+              {dobError && <p id="dob-error" className="text-xs text-red-600 mt-1" role="alert" aria-live="assertive">{dobError}</p>}
+            </fieldset>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Street Address</label>
-              <input type="text" value={form.borrower_info.address_street} onChange={(e) => updateBorrowerInfo('address_street', e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none" />
+              <label htmlFor="address-street" className="block text-sm font-medium text-gray-700 mb-1">Street Address</label>
+              <input id="address-street" type="text" value={form.borrower_info.address_street} onChange={(e) => updateBorrowerInfo('address_street', e.target.value)}
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none" autoComplete="street-address" />
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
-                <input type="text" value={form.borrower_info.address_city} onChange={(e) => updateBorrowerInfo('address_city', e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none" />
+                <label htmlFor="address-city" className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                <input id="address-city" type="text" value={form.borrower_info.address_city} onChange={(e) => updateBorrowerInfo('address_city', e.target.value)}
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none" autoComplete="address-level2" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
-                <select value={form.borrower_info.address_state} onChange={(e) => updateBorrowerInfo('address_state', e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none">
+                <label htmlFor="address-state" className="block text-sm font-medium text-gray-700 mb-1">State</label>
+                <select id="address-state" value={form.borrower_info.address_state} onChange={(e) => updateBorrowerInfo('address_state', e.target.value)}
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none" autoComplete="address-level1">
                   <option value="TX">TX</option><option value="FL">FL</option><option value="OH">OH</option>
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">ZIP</label>
-                <input type="text" value={form.borrower_info.address_zip} onChange={(e) => updateBorrowerInfo('address_zip', e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none" maxLength={10} />
+                <label htmlFor="address-zip" className="block text-sm font-medium text-gray-700 mb-1">ZIP</label>
+                <input id="address-zip" type="text" value={form.borrower_info.address_zip} onChange={(e) => updateBorrowerInfo('address_zip', e.target.value)}
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none" maxLength={10} autoComplete="postal-code" />
               </div>
             </div>
             <div className="flex gap-3">
               <button type="button" onClick={() => setStep(1)} className="flex-1 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50">Back</button>
               <button type="button" onClick={() => setStep(3)} className="flex-1 py-2.5 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700">Next: Income</button>
             </div>
-          </div>
+          </fieldset>
         )}
 
         {/* Step 3: Income & Employment */}
         {step === 3 && (
-          <div className="space-y-4">
-            <h2 className="text-lg font-semibold">Income & Employment</h2>
+          <fieldset className="space-y-4">
+            <legend className="text-lg font-semibold">Income & Employment</legend>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Employment Status</label>
-              <select value={form.borrower_info.employment_status} onChange={(e) => updateBorrowerInfo('employment_status', e.target.value)}
+              <label htmlFor="employment-status" className="block text-sm font-medium text-gray-700 mb-1">Employment Status</label>
+              <select id="employment-status" value={form.borrower_info.employment_status} onChange={(e) => updateBorrowerInfo('employment_status', e.target.value)}
                 className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none">
                 <option value="employed">Employed</option>
                 <option value="self_employed">Self-Employed</option>
@@ -236,13 +249,13 @@ export default function BorrowerApplication() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Employer Name</label>
-              <input type="text" value={form.borrower_info.employer_name} onChange={(e) => updateBorrowerInfo('employer_name', e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none" />
+              <label htmlFor="employer-name" className="block text-sm font-medium text-gray-700 mb-1">Employer Name</label>
+              <input id="employer-name" type="text" value={form.borrower_info.employer_name} onChange={(e) => updateBorrowerInfo('employer_name', e.target.value)}
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none" autoComplete="organization" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Income Source</label>
-              <select value={form.borrower_info.income_source} onChange={(e) => updateBorrowerInfo('income_source', e.target.value)}
+              <label htmlFor="income-source" className="block text-sm font-medium text-gray-700 mb-1">Income Source</label>
+              <select id="income-source" value={form.borrower_info.income_source} onChange={(e) => updateBorrowerInfo('income_source', e.target.value)}
                 className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none">
                 <option value="salary">Salary</option>
                 <option value="sso">SSO/Social Security</option>
@@ -253,29 +266,30 @@ export default function BorrowerApplication() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Annual Income ($)</label>
-                <input type="number" value={form.borrower_info.annual_income} onChange={(e) => updateBorrowerInfo('annual_income', e.target.value)}
+                <label htmlFor="annual-income" className="block text-sm font-medium text-gray-700 mb-1">Annual Income ($)</label>
+                <input id="annual-income" type="number" value={form.borrower_info.annual_income} onChange={(e) => updateBorrowerInfo('annual_income', e.target.value)}
                   className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none" min="0" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Monthly Debt Payments ($)</label>
-                <input type="number" value={form.borrower_info.monthly_debt_payments} onChange={(e) => updateBorrowerInfo('monthly_debt_payments', e.target.value)}
+                <label htmlFor="monthly-debt" className="block text-sm font-medium text-gray-700 mb-1">Monthly Debt Payments ($)</label>
+                <input id="monthly-debt" type="number" value={form.borrower_info.monthly_debt_payments} onChange={(e) => updateBorrowerInfo('monthly_debt_payments', e.target.value)}
                   className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none" min="0" />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Years Employed</label>
-              <input type="number" value={form.borrower_info.years_employed} onChange={(e) => updateBorrowerInfo('years_employed', e.target.value)}
+              <label htmlFor="years-employed" className="block text-sm font-medium text-gray-700 mb-1">Years Employed</label>
+              <input id="years-employed" type="number" value={form.borrower_info.years_employed} onChange={(e) => updateBorrowerInfo('years_employed', e.target.value)}
                 className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none" min="0" />
             </div>
             <div className="flex gap-3">
               <button type="button" onClick={() => setStep(2)} className="flex-1 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50">Back</button>
               <button type="submit" disabled={loading}
-                className="flex-1 py-2.5 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors disabled:opacity-50 flex items-center justify-center">
-                <Send className="w-4 h-4 mr-2" />{loading ? 'Submitting...' : 'Submit Application'}
+                className="flex-1 py-2.5 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors disabled:opacity-50 flex items-center justify-center"
+                aria-busy={loading}>
+                <Send className="w-4 h-4 mr-2" aria-hidden="true" />{loading ? 'Submitting...' : 'Submit Application'}
               </button>
             </div>
-          </div>
+          </fieldset>
         )}
       </form>
     </div>

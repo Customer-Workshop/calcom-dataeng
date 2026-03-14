@@ -55,12 +55,25 @@ const statusLabels = {
   uploaded: 'Uploaded',
 };
 
+const statusFullLabels = {
+  conditionally_approved: 'Conditionally Approved',
+  funding_authorized: 'Funding Authorized',
+  docs_sent: 'Documents Sent',
+  e_signed: 'Electronically Signed',
+  identity_verified: 'Identity Verified',
+  income_verified: 'Income Verified',
+  credit_pulled: 'Credit Report Pulled',
+  pre_qualified: 'Pre-Qualified',
+};
+
 export default function StatusBadge({ status }) {
   const color = statusColors[status] || 'bg-gray-100 text-gray-800';
   const label = statusLabels[status] || status?.replace(/_/g, ' ');
+  const fullLabel = statusFullLabels[status];
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${color}`}>
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium status-badge ${color}`} role="status">
       {label}
+      {fullLabel && fullLabel !== label && <span className="sr-only"> ({fullLabel})</span>}
     </span>
   );
 }

@@ -17,8 +17,8 @@ export default function ApplicationDetail() {
   useEffect(() => { fetchApplication(id); }, [id]);
 
   const app = currentApplication;
-  if (loading && !app) return <div className="text-center py-12 text-gray-500">Loading...</div>;
-  if (!app) return <div className="text-center py-12 text-gray-500">Application not found</div>;
+  if (loading && !app) return <div className="text-center py-12 text-gray-500" role="status" aria-live="polite">Loading...</div>;
+  if (!app) return <div className="text-center py-12 text-gray-500" role="alert">Application not found</div>;
 
   const doAction = async (action, payload = {}) => {
     setActionLoading(action);
@@ -102,7 +102,7 @@ export default function ApplicationDetail() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       {message && (
-        <div className={`p-3 rounded-lg text-sm ${message.startsWith('Error') ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'}`}>
+        <div className={`p-3 rounded-lg text-sm ${message.startsWith('Error') ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'}`} role="alert" aria-live="polite">
           {message}
         </div>
       )}
@@ -137,50 +137,58 @@ export default function ApplicationDetail() {
           <div className="flex flex-wrap gap-2">
             {['submitted', 'pre_qualified'].includes(app.status) && (
               <button onClick={() => doAction('pre-qualify')} disabled={!!actionLoading}
-                className="px-4 py-2 bg-cyan-600 text-white rounded-lg text-sm hover:bg-cyan-700 disabled:opacity-50 flex items-center">
-                <CreditCard className="w-4 h-4 mr-1" /> Soft Credit Pull
+                className="px-4 py-2 bg-cyan-600 text-white rounded-lg text-sm hover:bg-cyan-700 disabled:opacity-50 flex items-center"
+                aria-busy={actionLoading === 'pre-qualify'}>
+                <CreditCard className="w-4 h-4 mr-1" aria-hidden="true" /> Soft Credit Pull
               </button>
             )}
             {['submitted', 'pre_qualified'].includes(app.status) && (
               <button onClick={() => doAction('credit-pull')} disabled={!!actionLoading}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700 disabled:opacity-50 flex items-center">
-                <CreditCard className="w-4 h-4 mr-1" /> Hard Credit Pull
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700 disabled:opacity-50 flex items-center"
+                aria-busy={actionLoading === 'credit-pull'}>
+                <CreditCard className="w-4 h-4 mr-1" aria-hidden="true" /> Hard Credit Pull
               </button>
             )}
             {['submitted', 'pre_qualified', 'credit_pulled'].includes(app.status) && (
               <button onClick={() => doAction('identity-check')} disabled={!!actionLoading}
-                className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm hover:bg-teal-700 disabled:opacity-50 flex items-center">
-                <Shield className="w-4 h-4 mr-1" /> Identity Check
+                className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm hover:bg-teal-700 disabled:opacity-50 flex items-center"
+                aria-busy={actionLoading === 'identity-check'}>
+                <Shield className="w-4 h-4 mr-1" aria-hidden="true" /> Identity Check
               </button>
             )}
             {['credit_pulled', 'identity_verified'].includes(app.status) && (
               <button onClick={() => doAction('verify-income')} disabled={!!actionLoading}
-                className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm hover:bg-emerald-700 disabled:opacity-50 flex items-center">
-                <DollarSign className="w-4 h-4 mr-1" /> Verify Income
+                className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm hover:bg-emerald-700 disabled:opacity-50 flex items-center"
+                aria-busy={actionLoading === 'verify-income'}>
+                <DollarSign className="w-4 h-4 mr-1" aria-hidden="true" /> Verify Income
               </button>
             )}
             {['income_verified', 'credit_pulled', 'identity_verified'].includes(app.status) && (
               <button onClick={() => doAction('decision')} disabled={!!actionLoading}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700 disabled:opacity-50 flex items-center">
-                <CheckCircle className="w-4 h-4 mr-1" /> Run Decision Engine
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700 disabled:opacity-50 flex items-center"
+                aria-busy={actionLoading === 'decision'}>
+                <CheckCircle className="w-4 h-4 mr-1" aria-hidden="true" /> Run Decision Engine
               </button>
             )}
             {['approved', 'conditionally_approved'].includes(app.status) && (
               <button onClick={() => doAction('e-sign', { signature_data: 'mock_signature_base64', signer_name: `${app.borrower_first_name} ${app.borrower_last_name}` })} disabled={!!actionLoading}
-                className="px-4 py-2 bg-violet-600 text-white rounded-lg text-sm hover:bg-violet-700 disabled:opacity-50 flex items-center">
-                <PenTool className="w-4 h-4 mr-1" /> E-Sign
+                className="px-4 py-2 bg-violet-600 text-white rounded-lg text-sm hover:bg-violet-700 disabled:opacity-50 flex items-center"
+                aria-busy={actionLoading === 'e-sign'}>
+                <PenTool className="w-4 h-4 mr-1" aria-hidden="true" /> E-Sign
               </button>
             )}
             {app.status === 'e_signed' && (
               <button onClick={() => doAction('fund', { disbursement_method: 'ach' })} disabled={!!actionLoading}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 disabled:opacity-50 flex items-center">
-                <DollarSign className="w-4 h-4 mr-1" /> Authorize Funding
+                className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 disabled:opacity-50 flex items-center"
+                aria-busy={actionLoading === 'fund'}>
+                <DollarSign className="w-4 h-4 mr-1" aria-hidden="true" /> Authorize Funding
               </button>
             )}
             {app.status === 'funded' && (
               <button onClick={() => doAction('handoff')} disabled={!!actionLoading}
-                className="px-4 py-2 bg-slate-600 text-white rounded-lg text-sm hover:bg-slate-700 disabled:opacity-50 flex items-center">
-                <Truck className="w-4 h-4 mr-1" /> Handoff to Servicing
+                className="px-4 py-2 bg-slate-600 text-white rounded-lg text-sm hover:bg-slate-700 disabled:opacity-50 flex items-center"
+                aria-busy={actionLoading === 'handoff'}>
+                <Truck className="w-4 h-4 mr-1" aria-hidden="true" /> Handoff to Servicing
               </button>
             )}
           </div>
@@ -195,11 +203,11 @@ export default function ApplicationDetail() {
           <div className="flex gap-3">
             <button onClick={() => doAction('counter-offer-response', { accept: true })}
               className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center">
-              <CheckCircle className="w-4 h-4 mr-1" /> Accept
+              <CheckCircle className="w-4 h-4 mr-1" aria-hidden="true" /> Accept
             </button>
             <button onClick={() => doAction('counter-offer-response', { accept: false })}
               className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center">
-              <XCircle className="w-4 h-4 mr-1" /> Reject
+              <XCircle className="w-4 h-4 mr-1" aria-hidden="true" /> Reject
             </button>
           </div>
         </div>
@@ -212,7 +220,7 @@ export default function ApplicationDetail() {
           <p className="text-green-700 mb-4">Your loan has been approved! Sign to proceed with funding.</p>
           <button onClick={() => doAction('e-sign', { signature_data: 'borrower_esig_base64', signer_name: `${user.first_name} ${user.last_name}` })}
             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center">
-            <PenTool className="w-4 h-4 mr-1" /> Sign Documents
+            <PenTool className="w-4 h-4 mr-1" aria-hidden="true" /> Sign Documents
           </button>
         </div>
       )}
@@ -220,7 +228,7 @@ export default function ApplicationDetail() {
       {/* Adverse Action Notice */}
       {app.status === 'declined' && app.adverse_action_notice && (
         <div className="bg-red-50 rounded-xl border border-red-200 p-6">
-          <h2 className="text-lg font-semibold text-red-800 flex items-center mb-2"><AlertTriangle className="w-5 h-5 mr-2" /> Adverse Action Notice</h2>
+          <h2 className="text-lg font-semibold text-red-800 flex items-center mb-2"><AlertTriangle className="w-5 h-5 mr-2" aria-hidden="true" /> Adverse Action Notice</h2>
           <pre className="text-sm text-red-700 whitespace-pre-wrap font-mono">{app.adverse_action_notice}</pre>
         </div>
       )}
@@ -245,26 +253,30 @@ export default function ApplicationDetail() {
             <div>
               <p className="text-sm text-gray-500 mb-3">No collateral recorded yet.</p>
               {(isStaff || user?.role === 'borrower') && (
-                <form onSubmit={handleCollateral} className="space-y-3">
-                  <select value={collateralForm.type} onChange={(e) => setCollateralForm({ ...collateralForm, type: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg text-sm">
+                <form onSubmit={handleCollateral} className="space-y-3" aria-label="Add collateral">
+                  <label htmlFor="collateral-type" className="sr-only">Collateral type</label>
+                  <select id="collateral-type" value={collateralForm.type} onChange={(e) => setCollateralForm({ ...collateralForm, type: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg text-sm" aria-label="Collateral type">
                     <option value="vehicle">Vehicle</option>
                     <option value="property">Property</option>
                     <option value="equipment">Equipment</option>
                   </select>
                   {collateralForm.type === 'vehicle' && (
                     <>
-                      <input type="text" placeholder="VIN" value={collateralForm.vin} onChange={(e) => setCollateralForm({ ...collateralForm, vin: e.target.value })}
-                        className="w-full px-3 py-2 border rounded-lg text-sm" maxLength={17} />
-                      <select value={collateralForm.condition} onChange={(e) => setCollateralForm({ ...collateralForm, condition: e.target.value })}
-                        className="w-full px-3 py-2 border rounded-lg text-sm">
+                      <label htmlFor="collateral-vin" className="sr-only">VIN</label>
+                      <input id="collateral-vin" type="text" placeholder="VIN" value={collateralForm.vin} onChange={(e) => setCollateralForm({ ...collateralForm, vin: e.target.value })}
+                        className="w-full px-3 py-2 border rounded-lg text-sm" maxLength={17} aria-label="Vehicle identification number" />
+                      <label htmlFor="collateral-condition" className="sr-only">Condition</label>
+                      <select id="collateral-condition" value={collateralForm.condition} onChange={(e) => setCollateralForm({ ...collateralForm, condition: e.target.value })}
+                        className="w-full px-3 py-2 border rounded-lg text-sm" aria-label="Vehicle condition">
                         <option value="excellent">Excellent</option>
                         <option value="good">Good</option>
                         <option value="fair">Fair</option>
                         <option value="poor">Poor</option>
                       </select>
-                      <input type="number" placeholder="Mileage" value={collateralForm.mileage} onChange={(e) => setCollateralForm({ ...collateralForm, mileage: e.target.value })}
-                        className="w-full px-3 py-2 border rounded-lg text-sm" />
+                      <label htmlFor="collateral-mileage" className="sr-only">Mileage</label>
+                      <input id="collateral-mileage" type="number" placeholder="Mileage" value={collateralForm.mileage} onChange={(e) => setCollateralForm({ ...collateralForm, mileage: e.target.value })}
+                        className="w-full px-3 py-2 border rounded-lg text-sm" aria-label="Vehicle mileage" />
                     </>
                   )}
                   <button type="submit" disabled={actionLoading === 'collateral'}
@@ -310,7 +322,8 @@ export default function ApplicationDetail() {
                   <p className="text-gray-500 text-xs">{cond.category?.replace(/_/g, ' ')} &bull; <StatusBadge status={cond.status} /></p>
                 </div>
                 {cond.status === 'pending' && isStaff && (
-                  <button onClick={() => clearCondition(cond.id)} className="px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700">
+                  <button onClick={() => clearCondition(cond.id)} className="px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700"
+                    aria-label={`Clear condition: ${cond.name}`}>
                     Clear
                   </button>
                 )}
@@ -332,11 +345,13 @@ export default function ApplicationDetail() {
               </div>
             </div>
           ))}
-          <form onSubmit={handleDocUpload} className="mt-3 space-y-2">
-            <input type="text" placeholder="Document name" value={docForm.name} onChange={(e) => setDocForm({ ...docForm, name: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg text-sm" required />
-            <select value={docForm.category} onChange={(e) => setDocForm({ ...docForm, category: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg text-sm">
+          <form onSubmit={handleDocUpload} className="mt-3 space-y-2" aria-label="Upload document">
+            <label htmlFor="doc-name" className="sr-only">Document name</label>
+            <input id="doc-name" type="text" placeholder="Document name" value={docForm.name} onChange={(e) => setDocForm({ ...docForm, name: e.target.value })}
+              className="w-full px-3 py-2 border rounded-lg text-sm" required aria-required="true" aria-label="Document name" />
+            <label htmlFor="doc-category" className="sr-only">Document category</label>
+            <select id="doc-category" value={docForm.category} onChange={(e) => setDocForm({ ...docForm, category: e.target.value })}
+              className="w-full px-3 py-2 border rounded-lg text-sm" aria-label="Document category">
               <option value="income">Income</option>
               <option value="identity">Identity</option>
               <option value="collateral">Collateral</option>
@@ -344,8 +359,9 @@ export default function ApplicationDetail() {
               <option value="agreement">Agreement</option>
             </select>
             <button type="submit" disabled={actionLoading === 'doc'}
-              className="w-full py-2 bg-primary-600 text-white rounded-lg text-sm hover:bg-primary-700 disabled:opacity-50 flex items-center justify-center">
-              <Upload className="w-4 h-4 mr-1" /> Upload Document
+              className="w-full py-2 bg-primary-600 text-white rounded-lg text-sm hover:bg-primary-700 disabled:opacity-50 flex items-center justify-center"
+              aria-busy={actionLoading === 'doc'}>
+              <Upload className="w-4 h-4 mr-1" aria-hidden="true" /> Upload Document
             </button>
           </form>
         </div>
@@ -354,11 +370,11 @@ export default function ApplicationDetail() {
         {isUnderwriter && app.status === 'underwriting' && (
           <div className="bg-white rounded-xl shadow-sm border p-6 lg:col-span-2">
             <h2 className="text-lg font-semibold mb-4">Manual Decision</h2>
-            <form onSubmit={handleManualDecision} className="space-y-4">
+            <form onSubmit={handleManualDecision} className="space-y-4" aria-label="Manual underwriting decision">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Decision</label>
-                  <select value={decisionForm.decision_type} onChange={(e) => setDecisionForm({ ...decisionForm, decision_type: e.target.value })}
+                  <label htmlFor="decision-type" className="block text-sm font-medium text-gray-700 mb-1">Decision</label>
+                  <select id="decision-type" value={decisionForm.decision_type} onChange={(e) => setDecisionForm({ ...decisionForm, decision_type: e.target.value })}
                     className="w-full px-3 py-2 border rounded-lg">
                     <option value="manual_approve">Approve</option>
                     <option value="manual_decline">Decline</option>
@@ -367,24 +383,24 @@ export default function ApplicationDetail() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Approved Amount ($)</label>
-                  <input type="number" value={decisionForm.approved_amount} onChange={(e) => setDecisionForm({ ...decisionForm, approved_amount: e.target.value })}
+                  <label htmlFor="decision-amount" className="block text-sm font-medium text-gray-700 mb-1">Approved Amount ($)</label>
+                  <input id="decision-amount" type="number" value={decisionForm.approved_amount} onChange={(e) => setDecisionForm({ ...decisionForm, approved_amount: e.target.value })}
                     className="w-full px-3 py-2 border rounded-lg" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Rate (%)</label>
-                  <input type="number" step="0.01" value={decisionForm.approved_rate} onChange={(e) => setDecisionForm({ ...decisionForm, approved_rate: e.target.value })}
+                  <label htmlFor="decision-rate" className="block text-sm font-medium text-gray-700 mb-1">Rate (%)</label>
+                  <input id="decision-rate" type="number" step="0.01" value={decisionForm.approved_rate} onChange={(e) => setDecisionForm({ ...decisionForm, approved_rate: e.target.value })}
                     className="w-full px-3 py-2 border rounded-lg" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Term (months)</label>
-                  <input type="number" value={decisionForm.approved_term} onChange={(e) => setDecisionForm({ ...decisionForm, approved_term: e.target.value })}
+                  <label htmlFor="decision-term" className="block text-sm font-medium text-gray-700 mb-1">Term (months)</label>
+                  <input id="decision-term" type="number" value={decisionForm.approved_term} onChange={(e) => setDecisionForm({ ...decisionForm, approved_term: e.target.value })}
                     className="w-full px-3 py-2 border rounded-lg" />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                <textarea value={decisionForm.notes} onChange={(e) => setDecisionForm({ ...decisionForm, notes: e.target.value })}
+                <label htmlFor="decision-notes" className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                <textarea id="decision-notes" value={decisionForm.notes} onChange={(e) => setDecisionForm({ ...decisionForm, notes: e.target.value })}
                   className="w-full px-3 py-2 border rounded-lg" rows={2} />
               </div>
               <button type="submit" disabled={actionLoading === 'decision'}
