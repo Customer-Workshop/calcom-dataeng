@@ -227,6 +227,7 @@ module.exports = {
   isEncrypted,
   hashValue,
   maskSensitive,
+  maskEmail,
   encryptFields,
   decryptFields,
   maskFields,

@@ -300,4 +300,16 @@ if (require.main === module) {
   process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 }
 
+// Export internals for testing
+app._testInternals = {
+  gracefulShutdown,
+  closeAndExit,
+  getIsShuttingDown: () => isShuttingDown,
+  setIsShuttingDown: (v) => { isShuttingDown = v; },
+  getActiveConnections: () => activeConnections,
+  setActiveConnections: (v) => { activeConnections = v; },
+  getServer: () => server,
+  setServer: (v) => { server = v; },
+};
+
 module.exports = app;
