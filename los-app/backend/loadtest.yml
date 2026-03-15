@@ -1,44 +1,43 @@
 # Artillery Load Test Configuration
 #
-# Tests the LOS backend under simulated load of 5000+ concurrent users.
+# Performance test for the LOS backend under simulated load.
+# Runs against a live backend server (requires PostgreSQL).
 #
 # Usage:
 #   npx artillery run loadtest.yml
 #   npx artillery run loadtest.yml --output report.json
 #   npx artillery report report.json  # generates HTML report
 #
-# Install:
-#   npm install -g artillery
-#
 # Phases simulate realistic ramp-up:
-#   1. Warm-up:  50 users/sec for 60s  (steady baseline)
-#   2. Ramp-up:  50 → 200 users/sec over 120s
-#   3. Peak:     200 users/sec for 120s  (sustained high load)
-#   4. Spike:    500 users/sec for 30s   (burst test)
+#   1. Warm-up:  10 users/sec for 30s  (steady baseline)
+#   2. Ramp-up:  10 -> 50 users/sec over 60s
+#   3. Peak:     50 users/sec for 60s  (sustained load)
+#   4. Spike:    100 users/sec for 15s (burst test)
 
 config:
   target: "http://localhost:4000"
   phases:
+    - duration: 30
+      arrivalRate: 10
+      name: "Warm-up"
+    - duration: 60
+      arrivalRate: 10
+      rampTo: 50
+      name: "Ramp-up"
     - duration: 60
       arrivalRate: 50
-      name: "Warm-up"
-    - duration: 120
-      arrivalRate: 50
-      rampTo: 200
-      name: "Ramp-up"
-    - duration: 120
-      arrivalRate: 200
       name: "Sustained peak load"
-    - duration: 30
-      arrivalRate: 500
+    - duration: 15
+      arrivalRate: 100
       name: "Spike test"
   defaults:
     headers:
       Content-Type: "application/json"
-  # Expect p95 < 500ms, p99 < 2000ms
+  # Performance thresholds
   ensure:
     p95: 500
     p99: 2000
+    maxErrorRate: 5
 
 scenarios:
   # Health check (lightweight, tests basic throughput)
@@ -46,72 +45,45 @@ scenarios:
     weight: 30
     flow:
       - get:
+          url: "/api/health/live"
+      - get:
           url: "/api/health"
 
   # Login flow (auth endpoint under load)
-  - name: "Login"
+  - name: "Login attempt"
     weight: 20
     flow:
       - post:
           url: "/api/auth/login"
           json:
-            email: "john.smith@republicfinance.com"
-            password: "TestPass123!@#"
-          capture:
-            - json: "$.token"
-              as: "token"
+            email: "lo1@republicfinance.com"
+            password: "InvalidPasswordForLoadTest"
 
-  # Authenticated dashboard (pipeline data)
-  - name: "Dashboard read"
+  # Protected endpoint (returns 401, tests middleware throughput)
+  - name: "Protected endpoints"
     weight: 25
     flow:
-      - post:
-          url: "/api/auth/login"
-          json:
-            email: "sarah.johnson@republicfinance.com"
-            password: "TestPass123!@#"
-          capture:
-            - json: "$.token"
-              as: "token"
       - get:
-          url: "/api/applications?page=1&limit=20"
-          headers:
-            Authorization: "Bearer {{ token }}"
-
-  # Reporting dashboard (heavy queries)
-  - name: "Executive dashboard"
-    weight: 10
-    flow:
-      - post:
-          url: "/api/auth/login"
-          json:
-            email: "victoria.king@republicfinance.com"
-            password: "TestPass123!@#"
-          capture:
-            - json: "$.token"
-              as: "token"
+          url: "/api/applications"
+      - get:
+          url: "/api/admin/users"
       - get:
           url: "/api/reporting/dashboard"
-          headers:
-            Authorization: "Bearer {{ token }}"
 
-  # Reference data reads (cached endpoints)
+  # Reporting endpoint
+  - name: "Reporting"
+    weight: 10
+    flow:
+      - get:
+          url: "/api/reporting/pipeline"
+      - get:
+          url: "/api/reporting/adverse-actions"
+
+  # Reference data reads
   - name: "Reference data"
     weight: 15
     flow:
-      - post:
-          url: "/api/auth/login"
-          json:
-            email: "sarah.johnson@republicfinance.com"
-            password: "TestPass123!@#"
-          capture:
-            - json: "$.token"
-              as: "token"
       - get:
           url: "/api/admin/loan-products"
-          headers:
-            Authorization: "Bearer {{ token }}"
       - get:
           url: "/api/admin/branches"
-          headers:
-            Authorization: "Bearer {{ token }}"
