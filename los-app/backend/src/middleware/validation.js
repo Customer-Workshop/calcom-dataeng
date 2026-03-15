@@ -55,7 +55,7 @@ const schemas = {
 
   register: z.object({
     email: z.string().email('Valid email required'),
-    password: z.string().min(8, 'Password must be at least 8 characters'),
+    password: z.string().min(12, 'Password must be at least 12 characters'),
     first_name: z.string().min(1, 'First name is required'),
     last_name: z.string().min(1, 'Last name is required'),
     phone: z.string().optional(),
@@ -139,7 +139,7 @@ const schemas = {
 
   createUser: z.object({
     email: z.string().email(),
-    password: z.string().min(8),
+    password: z.string().min(12),
     first_name: z.string().min(1),
     last_name: z.string().min(1),
     phone: z.string().optional(),

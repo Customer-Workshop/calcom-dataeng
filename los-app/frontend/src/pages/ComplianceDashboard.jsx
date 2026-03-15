@@ -11,7 +11,7 @@ export default function ComplianceDashboard() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [editRule, setEditRule] = useState(null);
-  const [newRule, setNewRule] = useState({ state_code: '', state_name: '', is_enabled: true, max_interest_rate: '', max_fee_percentage: '', min_loan_amount: '', max_loan_amount: '', required_disclosures: '', special_provisions: '' });
+  const [newRule, setNewRule] = useState({ state: '', state_name: '', is_enabled: true, max_rate_cap: '', max_fee_percentage: '', min_loan_amount: '', max_loan_amount: '', disclosure_language: '', additional_rules: '' });
   const [showNewRule, setShowNewRule] = useState(false);
   const [auditFilter, setAuditFilter] = useState('');
 
@@ -43,7 +43,7 @@ export default function ComplianceDashboard() {
     setLoading(true);
     try {
       const { data } = await api.get('/reporting/adverse-actions');
-      setAdverseActions(data.adverse_actions || []);
+      setAdverseActions(data || []);
     } catch (err) { setMessage(`Error: ${err.response?.data?.error || err.message}`); }
     finally { setLoading(false); }
   };
@@ -52,12 +52,12 @@ export default function ComplianceDashboard() {
     try {
       const payload = {
         is_enabled: rule.is_enabled,
-        max_interest_rate: parseFloat(rule.max_interest_rate) || null,
+        max_rate_cap: parseFloat(rule.max_rate_cap) || null,
         max_fee_percentage: parseFloat(rule.max_fee_percentage) || null,
         min_loan_amount: parseFloat(rule.min_loan_amount) || null,
         max_loan_amount: parseFloat(rule.max_loan_amount) || null,
-        required_disclosures: rule.required_disclosures,
-        special_provisions: rule.special_provisions,
+        disclosure_language: rule.disclosure_language,
+        additional_rules: rule.additional_rules,
       };
       await api.put(`/admin/state-rules/${rule.id}`, payload);
       setMessage('Rule updated successfully');
@@ -70,14 +70,14 @@ export default function ComplianceDashboard() {
     try {
       await api.post('/admin/state-rules', {
         ...newRule,
-        max_interest_rate: parseFloat(newRule.max_interest_rate) || null,
+        max_rate_cap: parseFloat(newRule.max_rate_cap) || null,
         max_fee_percentage: parseFloat(newRule.max_fee_percentage) || null,
         min_loan_amount: parseFloat(newRule.min_loan_amount) || null,
         max_loan_amount: parseFloat(newRule.max_loan_amount) || null,
       });
       setMessage('Rule created');
       setShowNewRule(false);
-      setNewRule({ state_code: '', state_name: '', is_enabled: true, max_interest_rate: '', max_fee_percentage: '', min_loan_amount: '', max_loan_amount: '', required_disclosures: '', special_provisions: '' });
+      setNewRule({ state: '', state_name: '', is_enabled: true, max_rate_cap: '', max_fee_percentage: '', min_loan_amount: '', max_loan_amount: '', disclosure_language: '', additional_rules: '' });
       loadRules();
     } catch (err) { setMessage(`Error: ${err.response?.data?.error || err.message}`); }
   };
@@ -122,7 +122,7 @@ export default function ComplianceDashboard() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label htmlFor="new-state-code" className="sr-only">State Code</label>
-                  <input id="new-state-code" type="text" placeholder="State Code (e.g., CA)" value={newRule.state_code} onChange={(e) => setNewRule({ ...newRule, state_code: e.target.value })}
+                  <input id="new-state-code" type="text" placeholder="State Code (e.g., CA)" value={newRule.state} onChange={(e) => setNewRule({ ...newRule, state: e.target.value })}
                     className="px-3 py-2 border rounded-lg text-sm" maxLength={2} aria-label="State code" />
                 </div>
                 <div>
@@ -132,7 +132,7 @@ export default function ComplianceDashboard() {
                 </div>
                 <div>
                   <label htmlFor="new-max-rate" className="sr-only">Max Rate %</label>
-                  <input id="new-max-rate" type="number" step="0.01" placeholder="Max Rate %" value={newRule.max_interest_rate} onChange={(e) => setNewRule({ ...newRule, max_interest_rate: e.target.value })}
+                  <input id="new-max-rate" type="number" step="0.01" placeholder="Max Rate %" value={newRule.max_rate_cap} onChange={(e) => setNewRule({ ...newRule, max_rate_cap: e.target.value })}
                     className="px-3 py-2 border rounded-lg text-sm" aria-label="Maximum interest rate percentage" />
                 </div>
                 <div>
@@ -152,7 +152,7 @@ export default function ComplianceDashboard() {
                 </div>
               </div>
               <label htmlFor="new-disclosures" className="sr-only">Required disclosures</label>
-              <textarea id="new-disclosures" placeholder="Required disclosures" value={newRule.required_disclosures} onChange={(e) => setNewRule({ ...newRule, required_disclosures: e.target.value })}
+              <textarea id="new-disclosures" placeholder="Required disclosures" value={newRule.disclosure_language} onChange={(e) => setNewRule({ ...newRule, disclosure_language: e.target.value })}
                 className="w-full px-3 py-2 border rounded-lg text-sm" rows={2} aria-label="Required disclosures" />
               <div className="flex gap-3">
                 <button onClick={() => setShowNewRule(false)} className="px-4 py-2 border rounded-lg text-sm">Cancel</button>
@@ -170,7 +170,7 @@ export default function ComplianceDashboard() {
                       <div className="grid grid-cols-2 gap-3">
                           <div>
                             <label htmlFor={`edit-max-rate-${rule.id}`} className="text-xs text-gray-500">Max Rate %</label>
-                            <input id={`edit-max-rate-${rule.id}`} type="number" step="0.01" value={rule.max_interest_rate || ''} onChange={(e) => setStateRules(prev => prev.map(r => r.id === rule.id ? { ...r, max_interest_rate: e.target.value } : r))}
+                            <input id={`edit-max-rate-${rule.id}`} type="number" step="0.01" value={rule.max_rate_cap || ''} onChange={(e) => setStateRules(prev => prev.map(r => r.id === rule.id ? { ...r, max_rate_cap: e.target.value } : r))}
                               className="w-full px-3 py-2 border rounded-lg text-sm" />
                           </div>
                           <div>
@@ -194,7 +194,7 @@ export default function ComplianceDashboard() {
                         <input id={`edit-enabled-${rule.id}`} type="checkbox" checked={rule.is_enabled} onChange={(e) => setStateRules(prev => prev.map(r => r.id === rule.id ? { ...r, is_enabled: e.target.checked } : r))} />
                       </div>
                       <label htmlFor={`edit-disclosures-${rule.id}`} className="sr-only">Required disclosures</label>
-                      <textarea id={`edit-disclosures-${rule.id}`} value={rule.required_disclosures || ''} onChange={(e) => setStateRules(prev => prev.map(r => r.id === rule.id ? { ...r, required_disclosures: e.target.value } : r))}
+                      <textarea id={`edit-disclosures-${rule.id}`} value={rule.disclosure_language || ''} onChange={(e) => setStateRules(prev => prev.map(r => r.id === rule.id ? { ...r, disclosure_language: e.target.value } : r))}
                         className="w-full px-3 py-2 border rounded-lg text-sm" rows={2} placeholder="Required disclosures" />
                       <div className="flex gap-2">
                         <button onClick={() => setEditRule(null)} className="px-3 py-1.5 border rounded text-sm">Cancel</button>
@@ -207,13 +207,13 @@ export default function ComplianceDashboard() {
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="flex items-center gap-2">
-                          <h3 className="font-semibold">{rule.state_name} ({rule.state_code})</h3>
+                          <h3 className="font-semibold">{rule.state_name} ({rule.state})</h3>
                           <span className={`px-2 py-0.5 rounded-full text-xs ${rule.is_enabled ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                             {rule.is_enabled ? 'Active' : 'Disabled'}
                           </span>
                         </div>
                         <p className="text-sm text-gray-500 mt-1">
-                          Max Rate: {rule.max_interest_rate}% &bull; Max Fee: {rule.max_fee_percentage}% &bull;
+                          Max Rate: {rule.max_rate_cap}% &bull; Max Fee: {rule.max_fee_percentage}% &bull;
                           Loan: ${parseFloat(rule.min_loan_amount || 0).toLocaleString()} - ${parseFloat(rule.max_loan_amount || 0).toLocaleString()}
                         </p>
                       </div>
@@ -286,14 +286,14 @@ export default function ComplianceDashboard() {
                 </div>
                 <StatusBadge status="declined" />
               </div>
-              {aa.reason_codes && (
+              {aa.decision_reasons && (
                 <div className="mt-2 flex flex-wrap gap-1">
-                  {JSON.parse(aa.reason_codes).map((code, i) => (
+                  {JSON.parse(aa.decision_reasons).map((code, i) => (
                     <span key={i} className="px-2 py-0.5 bg-red-50 text-red-700 rounded text-xs">{code}</span>
                   ))}
                 </div>
               )}
-              <p className="text-xs text-gray-400 mt-2">{new Date(aa.created_at).toLocaleString()}</p>
+              <p className="text-xs text-gray-400 mt-2">{aa.decision_at ? new Date(aa.decision_at).toLocaleString() : 'N/A'}</p>
             </div>
           ))}
         </div>

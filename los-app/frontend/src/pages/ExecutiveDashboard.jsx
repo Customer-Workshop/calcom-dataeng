@@ -19,27 +19,27 @@ export default function ExecutiveDashboard() {
     { label: 'Avg LTV', value: `${(dashboard.avg_ltv || 0).toFixed(1)}%`, icon: DollarSign, color: 'text-purple-600 bg-purple-50' },
     { label: 'Avg Time to Fund', value: `${(dashboard.avg_time_to_fund_days || 0).toFixed(1)}d`, icon: Clock, color: 'text-orange-600 bg-orange-50' },
     { label: 'Total Funded', value: `$${((dashboard.total_funded_amount || 0) / 1000).toFixed(0)}k`, icon: DollarSign, color: 'text-emerald-600 bg-emerald-50' },
-    { label: 'Decline Rate', value: `${(dashboard.decline_rate || 0).toFixed(1)}%`, icon: TrendingUp, color: 'text-red-600 bg-red-50' },
+    { label: 'Decline Rate', value: `${(dashboard.total_applications > 0 ? ((dashboard.total_applications - (dashboard.approval_rate / 100 * dashboard.total_applications)) / dashboard.total_applications * 100) : 0).toFixed(1)}%`, icon: TrendingUp, color: 'text-red-600 bg-red-50' },
   ] : [];
 
-  const volumeByState = dashboard?.volume_by_state?.map(s => ({
+  const volumeByState = dashboard?.by_state?.map(s => ({
     name: s.state,
     applications: parseInt(s.count),
     amount: parseFloat(s.total_amount) / 1000,
   })) || [];
 
-  const volumeByProduct = dashboard?.volume_by_product?.map(p => ({
+  const volumeByProduct = dashboard?.by_product?.map(p => ({
     name: p.product_name || 'Unknown',
     value: parseInt(p.count),
   })) || [];
 
-  const volumeByBranch = dashboard?.volume_by_branch?.map(b => ({
+  const volumeByBranch = dashboard?.by_branch?.map(b => ({
     name: b.branch_name || 'Unassigned',
     applications: parseInt(b.count),
     amount: parseFloat(b.total_amount) / 1000,
   })) || [];
 
-  const statusBreakdown = dashboard?.status_breakdown?.map(s => ({
+  const statusBreakdown = dashboard?.by_status?.map(s => ({
     name: s.status?.replace(/_/g, ' ') || 'Unknown',
     value: parseInt(s.count),
   })) || [];

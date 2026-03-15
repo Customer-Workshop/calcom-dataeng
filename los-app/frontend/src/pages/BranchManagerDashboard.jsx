@@ -19,7 +19,7 @@ export default function BranchManagerDashboard() {
     fetchApplications({ status: statusFilter || undefined, page, limit: 20 });
     fetchPipeline();
     api.get('/admin/users', { params: { limit: 100 } }).then(res => {
-      setOfficers(res.data.data?.filter(u => u.role_name === 'loan_officer') || []);
+      setOfficers(res.data.data?.filter(u => u.role === 'loan_officer') || []);
     }).catch(() => {});
   }, [statusFilter, page]);
 

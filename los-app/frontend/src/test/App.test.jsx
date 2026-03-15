@@ -501,22 +501,21 @@ describe('ExecutiveDashboard - With Data', () => {
       avg_ltv: 78.3,
       avg_time_to_fund_days: 5.2,
       total_funded_amount: 1250000,
-      decline_rate: 15.0,
-      volume_by_state: [
+      by_state: [
         { state: 'TX', count: '20', total_amount: '500000' },
         { state: 'FL', count: '15', total_amount: '375000' },
         { state: 'OH', count: '10', total_amount: '250000' },
       ],
-      volume_by_product: [
+      by_product: [
         { product_name: 'Personal Loan', count: '25' },
         { product_name: 'Auto Secured', count: '15' },
         { product_name: 'Home Improvement', count: '10' },
       ],
-      volume_by_branch: [
+      by_branch: [
         { branch_name: 'Main Street', count: '30', total_amount: '750000' },
         { branch_name: 'Downtown', count: '20', total_amount: '500000' },
       ],
-      status_breakdown: [
+      by_status: [
         { status: 'approved', count: '20' },
         { status: 'declined', count: '10' },
         { status: 'funded', count: '15' },

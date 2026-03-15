@@ -37,8 +37,8 @@ router.get('/dashboard', authenticate, authorize('executive', 'system_admin', 'b
     // Average LTV
     const avgLTV = await baseQuery.clone().whereNotNull('ltv_ratio').avg('ltv_ratio as avg_ltv').first();
 
-    // Average time to fund (days)
-    const fundedApps = await db('applications')
+    // Average time to fund (days) — respects branch/date filters
+    const fundedApps = await baseQuery.clone()
       .whereNotNull('funded_at')
       .whereNotNull('submitted_at')
       .select(db.raw("AVG(EXTRACT(EPOCH FROM (funded_at - submitted_at)) / 86400) as avg_days"));
