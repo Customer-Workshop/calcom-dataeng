@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Send, AlertCircle } from 'lucide-react';
 import useStore from '../store/useStore';
@@ -21,6 +21,37 @@ export default function BorrowerApplication() {
   const [dobError, setDobError] = useState('');
   const dayRef = useRef(null);
   const yearRef = useRef(null);
+
+  const months = useMemo(() => [
+    { value: '', label: 'Month' },
+    { value: '1', label: 'January' },
+    { value: '2', label: 'February' },
+    { value: '3', label: 'March' },
+    { value: '4', label: 'April' },
+    { value: '5', label: 'May' },
+    { value: '6', label: 'June' },
+    { value: '7', label: 'July' },
+    { value: '8', label: 'August' },
+    { value: '9', label: 'September' },
+    { value: '10', label: 'October' },
+    { value: '11', label: 'November' },
+    { value: '12', label: 'December' },
+  ], []);
+
+  const daysInMonth = useMemo(() => {
+    const m = parseInt(form.borrower_info.dob_month) || 0;
+    const y = parseInt(form.borrower_info.dob_year) || 2000;
+    if (m === 0) return 31;
+    return new Date(y, m, 0).getDate();
+  }, [form.borrower_info.dob_month, form.borrower_info.dob_year]);
+
+  const dayOptions = useMemo(() => {
+    const opts = [{ value: '', label: 'Day' }];
+    for (let d = 1; d <= daysInMonth; d++) {
+      opts.push({ value: String(d), label: String(d) });
+    }
+    return opts;
+  }, [daysInMonth]);
 
   useEffect(() => {
     api.get('/admin/loan-products').then(res => setProducts(res.data)).catch(() => {});
@@ -48,12 +79,22 @@ export default function BorrowerApplication() {
     return '';
   };
 
-  const handleDobChange = (field, value, maxLen, nextRef) => {
-    const numOnly = value.replace(/\D/g, '').slice(0, maxLen);
-    updateBorrowerInfo(field, numOnly);
-    if (numOnly.length === maxLen && nextRef?.current) {
-      nextRef.current.focus();
-    }
+  const handleMonthChange = (value) => {
+    updateBorrowerInfo('dob_month', value);
+    setDobError('');
+    if (value && dayRef.current) dayRef.current.focus();
+  };
+
+  const handleDayChange = (value) => {
+    updateBorrowerInfo('dob_day', value);
+    setDobError('');
+    if (value && yearRef.current) yearRef.current.focus();
+  };
+
+  const handleYearChange = (value) => {
+    const numOnly = value.replace(/\D/g, '').slice(0, 4);
+    updateBorrowerInfo('dob_year', numOnly);
+    setDobError('');
   };
 
   const handleSubmit = async (e) => {
@@ -174,34 +215,75 @@ export default function BorrowerApplication() {
                 className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none" maxLength={4} pattern="\d{4}" placeholder="1234" autoComplete="off" />
             </div>
             <fieldset>
-              <legend className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</legend>
-              <div className="flex gap-2" role="group" aria-describedby={dobError ? 'dob-error' : undefined}>
-                <div className="flex-1">
-                  <label htmlFor="dob-month" className="sr-only">Month</label>
-                  <input id="dob-month" type="text" inputMode="numeric" placeholder="MM" value={form.borrower_info.dob_month}
-                    onChange={(e) => handleDobChange('dob_month', e.target.value, 2, dayRef)}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none text-center" maxLength={2}
-                    aria-label="Birth month" aria-invalid={dobError ? 'true' : undefined} />
-                  <span className="text-xs text-gray-400 mt-0.5 block text-center" aria-hidden="true">Month</span>
+              <legend className="block text-sm font-medium text-gray-700 mb-2">Date of Birth</legend>
+              <div className="grid grid-cols-[1fr_auto_auto] gap-3 items-start" role="group" aria-describedby={dobError ? 'dob-error' : undefined}>
+                <div>
+                  <label htmlFor="dob-month" className="sr-only">Birth month</label>
+                  <select
+                    id="dob-month"
+                    value={form.borrower_info.dob_month}
+                    onChange={(e) => handleMonthChange(e.target.value)}
+                    className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none bg-white appearance-none cursor-pointer text-sm ${
+                      dobError ? 'border-red-400 ring-1 ring-red-300' : 'border-gray-300'
+                    } ${!form.borrower_info.dob_month ? 'text-gray-400' : 'text-gray-900'}`}
+                    aria-label="Birth month"
+                    aria-invalid={dobError ? 'true' : undefined}
+                    aria-required="true"
+                    autoComplete="bday-month"
+                  >
+                    {months.map((m) => (
+                      <option key={m.value} value={m.value} disabled={m.value === ''}>{m.label}</option>
+                    ))}
+                  </select>
                 </div>
-                <div className="flex-1">
-                  <label htmlFor="dob-day" className="sr-only">Day</label>
-                  <input id="dob-day" type="text" inputMode="numeric" placeholder="DD" value={form.borrower_info.dob_day} ref={dayRef}
-                    onChange={(e) => handleDobChange('dob_day', e.target.value, 2, yearRef)}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none text-center" maxLength={2}
-                    aria-label="Birth day" aria-invalid={dobError ? 'true' : undefined} />
-                  <span className="text-xs text-gray-400 mt-0.5 block text-center" aria-hidden="true">Day</span>
+                <div className="w-20">
+                  <label htmlFor="dob-day" className="sr-only">Birth day</label>
+                  <select
+                    id="dob-day"
+                    ref={dayRef}
+                    value={form.borrower_info.dob_day}
+                    onChange={(e) => handleDayChange(e.target.value)}
+                    className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none bg-white appearance-none cursor-pointer text-sm ${
+                      dobError ? 'border-red-400 ring-1 ring-red-300' : 'border-gray-300'
+                    } ${!form.borrower_info.dob_day ? 'text-gray-400' : 'text-gray-900'}`}
+                    aria-label="Birth day"
+                    aria-invalid={dobError ? 'true' : undefined}
+                    aria-required="true"
+                    autoComplete="bday-day"
+                  >
+                    {dayOptions.map((d) => (
+                      <option key={d.value} value={d.value} disabled={d.value === ''}>{d.label}</option>
+                    ))}
+                  </select>
                 </div>
-                <div className="flex-[1.5]">
-                  <label htmlFor="dob-year" className="sr-only">Year</label>
-                  <input id="dob-year" type="text" inputMode="numeric" placeholder="YYYY" value={form.borrower_info.dob_year} ref={yearRef}
-                    onChange={(e) => { handleDobChange('dob_year', e.target.value, 4, null); setDobError(''); }}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 outline-none text-center ${dobError ? 'border-red-400 ring-1 ring-red-300' : ''}`} maxLength={4}
-                    aria-label="Birth year" aria-invalid={dobError ? 'true' : undefined} />
-                  <span className="text-xs text-gray-400 mt-0.5 block text-center" aria-hidden="true">Year</span>
+                <div className="w-24">
+                  <label htmlFor="dob-year" className="sr-only">Birth year</label>
+                  <input
+                    id="dob-year"
+                    ref={yearRef}
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    placeholder="Year"
+                    value={form.borrower_info.dob_year}
+                    onChange={(e) => handleYearChange(e.target.value)}
+                    className={`w-full px-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none text-center text-sm ${
+                      dobError ? 'border-red-400 ring-1 ring-red-300' : 'border-gray-300'
+                    }`}
+                    maxLength={4}
+                    aria-label="Birth year"
+                    aria-invalid={dobError ? 'true' : undefined}
+                    aria-required="true"
+                    autoComplete="bday-year"
+                  />
                 </div>
               </div>
-              {dobError && <p id="dob-error" className="text-xs text-red-600 mt-1" role="alert" aria-live="assertive">{dobError}</p>}
+              {dobError && (
+                <p id="dob-error" className="text-xs text-red-600 mt-2 flex items-center" role="alert" aria-live="assertive">
+                  <AlertCircle className="w-3.5 h-3.5 mr-1 flex-shrink-0" aria-hidden="true" />
+                  {dobError}
+                </p>
+              )}
             </fieldset>
             <div>
               <label htmlFor="address-street" className="block text-sm font-medium text-gray-700 mb-1">Street Address</label>
